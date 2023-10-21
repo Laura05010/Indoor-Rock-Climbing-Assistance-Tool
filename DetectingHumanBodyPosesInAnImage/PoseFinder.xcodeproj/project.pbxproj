@@ -12,6 +12,10 @@
 		0DCEF2C92416701D00ECEC99 /* PoseBuilder+Single.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCEF2C82416701D00ECEC99 /* PoseBuilder+Single.swift */; };
 		0DCEF2CB2416709B00ECEC99 /* PoseBuilder+Multiple.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCEF2CA2416709B00ECEC99 /* PoseBuilder+Multiple.swift */; };
 		0DCEF2CE241676C000ECEC99 /* PoseBuilderConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCEF2CD241676C000ECEC99 /* PoseBuilderConfiguration.swift */; };
+		491FA74D2AE352C9000A6FA0 /* hold_detection.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 491FA74C2AE352C9000A6FA0 /* hold_detection.mlmodel */; };
+		491FA74F2AE35AFE000A6FA0 /* YOLOV8Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491FA74E2AE35AFE000A6FA0 /* YOLOV8Input.swift */; };
+		491FA7512AE35B42000A6FA0 /* YOLOV8Output.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491FA7502AE35B42000A6FA0 /* YOLOV8Output.swift */; };
+		491FA7532AE35D44000A6FA0 /* YOLOV8.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491FA7522AE35D44000A6FA0 /* YOLOV8.swift */; };
 		4A0FC5BC23190AD6004886B9 /* CGPoint+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0FC5BB23190AD6004886B9 /* CGPoint+Extension.swift */; };
 		4A2D05CE23BF9A2C00D002ED /* ConfigurationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2D05CD23BF9A2C00D002ED /* ConfigurationViewController.swift */; };
 		4A2D05D023BF9BBF00D002ED /* PopOverModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2D05CF23BF9BBF00D002ED /* PopOverModalViewController.swift */; };
@@ -33,13 +37,17 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0563E980FDE557646F54ED8A /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE.txt; sourceTree = "<group>"; };
+		0563E980FDE557646F54ED8A /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		0D4BB83E249769C800076D64 /* PoseNetMobileNet075S16FP16.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = PoseNetMobileNet075S16FP16.mlmodel; sourceTree = "<group>"; };
 		0DCEF2C6241666CA00ECEC99 /* PoseBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseBuilder.swift; sourceTree = "<group>"; };
 		0DCEF2C82416701D00ECEC99 /* PoseBuilder+Single.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PoseBuilder+Single.swift"; sourceTree = "<group>"; };
 		0DCEF2CA2416709B00ECEC99 /* PoseBuilder+Multiple.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PoseBuilder+Multiple.swift"; sourceTree = "<group>"; };
 		0DCEF2CD241676C000ECEC99 /* PoseBuilderConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseBuilderConfiguration.swift; sourceTree = "<group>"; };
-		420B7A9F4BA833CE510130DA /* ACKNOWLEDGMENTS.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = ACKNOWLEDGMENTS.txt; sourceTree = "<group>"; };
+		420B7A9F4BA833CE510130DA /* ACKNOWLEDGMENTS.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = ACKNOWLEDGMENTS.txt; sourceTree = "<group>"; };
+		491FA74C2AE352C9000A6FA0 /* hold_detection.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = hold_detection.mlmodel; sourceTree = "<group>"; };
+		491FA74E2AE35AFE000A6FA0 /* YOLOV8Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YOLOV8Input.swift; sourceTree = "<group>"; };
+		491FA7502AE35B42000A6FA0 /* YOLOV8Output.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YOLOV8Output.swift; sourceTree = "<group>"; };
+		491FA7522AE35D44000A6FA0 /* YOLOV8.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YOLOV8.swift; sourceTree = "<group>"; };
 		4A0FC5BB23190AD6004886B9 /* CGPoint+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPoint+Extension.swift"; sourceTree = "<group>"; };
 		4A2D05CD23BF9A2C00D002ED /* ConfigurationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationViewController.swift; sourceTree = "<group>"; };
 		4A2D05CF23BF9BBF00D002ED /* PopOverModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopOverModalViewController.swift; sourceTree = "<group>"; };
@@ -61,7 +69,7 @@
 		4AE8C3D023AD2D3B005F9953 /* PoseNetInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseNetInput.swift; sourceTree = "<group>"; };
 		4AE8C3D223AD2D8A005F9953 /* PoseNetOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoseNetOutput.swift; sourceTree = "<group>"; };
 		57C02DF057C02B4000000001 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		BEE6CF152B804A05BF905D20 /* SampleCode.xcconfig */ = {isa = PBXFileReference; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
+		BEE6CF152B804A05BF905D20 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,7 +89,6 @@
 				0563E980FDE557646F54ED8A /* LICENSE.txt */,
 				420B7A9F4BA833CE510130DA /* ACKNOWLEDGMENTS.txt */,
 			);
-			name = LICENSE;
 			path = LICENSE;
 			sourceTree = "<group>";
 		};
@@ -106,6 +113,17 @@
 			name = Configuration;
 			sourceTree = "<group>";
 		};
+		491FA74B2AE352AE000A6FA0 /* HoldDetection */ = {
+			isa = PBXGroup;
+			children = (
+				491FA74C2AE352C9000A6FA0 /* hold_detection.mlmodel */,
+				491FA74E2AE35AFE000A6FA0 /* YOLOV8Input.swift */,
+				491FA7502AE35B42000A6FA0 /* YOLOV8Output.swift */,
+				491FA7522AE35D44000A6FA0 /* YOLOV8.swift */,
+			);
+			path = HoldDetection;
+			sourceTree = "<group>";
+		};
 		4A2D23A522BB70E400494C55 = {
 			isa = PBXGroup;
 			children = (
@@ -128,6 +146,7 @@
 		4A2D23B022BB70E400494C55 /* PoseFinder */ = {
 			isa = PBXGroup;
 			children = (
+				491FA74B2AE352AE000A6FA0 /* HoldDetection */,
 				0DCEF2CC241675C200ECEC99 /* Pose */,
 				6594E51B23454C4100D3C44D /* Model */,
 				4AFBF15322CC9A1900A4B11A /* Extensions+Types */,
@@ -183,8 +202,8 @@
 		6594E51B23454C4100D3C44D /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				0D4BB83E249769C800076D64 /* PoseNetMobileNet075S16FP16.mlmodel */,
 				4AE8C3D023AD2D3B005F9953 /* PoseNetInput.swift */,
+				0D4BB83E249769C800076D64 /* PoseNetMobileNet075S16FP16.mlmodel */,
 				4AE8C3D223AD2D8A005F9953 /* PoseNetOutput.swift */,
 				4AA5C4B922BBBC2A00277977 /* PoseNet.swift */,
 			);
@@ -264,6 +283,7 @@
 			files = (
 				4A2D05D023BF9BBF00D002ED /* PopOverModalViewController.swift in Sources */,
 				0DCEF2C92416701D00ECEC99 /* PoseBuilder+Single.swift in Sources */,
+				491FA7512AE35B42000A6FA0 /* YOLOV8Output.swift in Sources */,
 				0DCEF2CB2416709B00ECEC99 /* PoseBuilder+Multiple.swift in Sources */,
 				0DCEF2C7241666CA00ECEC99 /* PoseBuilder.swift in Sources */,
 				4A6C8A8223E84D1D0080886A /* GradientOverlayView.swift in Sources */,
@@ -276,8 +296,11 @@
 				4AE8C3D123AD2D3B005F9953 /* PoseNetInput.swift in Sources */,
 				4AA5C4BA22BBBC2A00277977 /* PoseNet.swift in Sources */,
 				4AE8C3D323AD2D8A005F9953 /* PoseNetOutput.swift in Sources */,
+				491FA74D2AE352C9000A6FA0 /* hold_detection.mlmodel in Sources */,
+				491FA7532AE35D44000A6FA0 /* YOLOV8.swift in Sources */,
 				0DCEF2CE241676C000ECEC99 /* PoseBuilderConfiguration.swift in Sources */,
 				4ADD52F822BBCF580008FAAC /* Joint.swift in Sources */,
+				491FA74F2AE35AFE000A6FA0 /* YOLOV8Input.swift in Sources */,
 				4ADE4C8C2346C07300FFD895 /* AVCaptureVideoOrientation+Extension.swift in Sources */,
 				4AE8C3CB23ACDF1C005F9953 /* PoseImageView.swift in Sources */,
 				0D4BB83F249769C800076D64 /* PoseNetMobileNet075S16FP16.mlmodel in Sources */,
