@@ -9,6 +9,8 @@ import supervision as sv
 
 import time
 
+import calibrate
+
 
 def calculate_angle(a,b,c):
     a = np.array(a) # First
@@ -19,8 +21,8 @@ def calculate_angle(a,b,c):
                                                             a[0]-b[0])
     angle = np.abs(radians*180.0/np.pi)
     
-    if angle >180.0:
-        angle = 360-angle
+    if 180.0 < angle:
+        angle = 360 - angle
         
     return angle 
 
@@ -37,9 +39,9 @@ def display_hand(image, hand_pts):
     scaling_factor = 3  # scaling factor must be int
     radius_3d = scaling_factor * int(sum(distances ) / len(distances))
 
-    # Draw the circle in 3D space
+    # Draw the circle in 3D space (-1 thickness for a filled circle)
     cv2.circle(image, (int(center_3d[0]), int(center_3d[1])), radius_3d, 
-               (245, 117, 66), thickness=-1)  # -1 thickness for a filled circle
+               (245, 117, 66), thickness=-1)
 
 def foot_pts(ankle, heel, index, frame_shape_1, frame_shape_0):
     return np.array([
@@ -89,8 +91,7 @@ def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
         return np.mean(right_hand_pts, axis=0)
     elif limb in l_hand:
         return np.mean(left_hand_pts, axis=0)
-    else:
-        return np.array([d[limb].x, d[limb].y], np.int32)
+    return np.array([d[limb].x, d[limb].y], np.int32)
     
 # TODO: function that checks what holds the person is on
 # A hold corresponding to right hand, left hand, right foot, left foot
@@ -103,7 +104,8 @@ def get_curr_position(d, detections):
                 detection[0], detection[1], detection[2], detection[3]
             limb_x, limb_y = coords.x, coords.y
 
-            if (limb in extremities) and x1 <= limb_x <= x2 and y1 <= limb_y <= y2: # Within bounds
+            # Within bounds
+            if (limb in extremities) and is_within_hold(coords, detection):
                 # save the coordinates
                 pass
 
@@ -128,43 +130,19 @@ def pose_est_hold_detect():
     ## Setup mediapipe instance
     with mp_pose.Pose(min_detection_confidence=0.8,
                       min_tracking_confidence=0.8) as pose:
-        seconds_passed = 0
         start_time = time.time()
-        is_calibrating = True # Keeps track if you are at calibration phrase
+        calibrated = False # Keeps track if you are at calibration phrase
 
         while cap.isOpened():
             ret, frame = cap.read()
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
 
-            if is_calibrating:
-                print(f"Calibrating... " + " " * 20, end='\r')
-                # check if it's been 30 seconds
-                # break when you reach 30 seconds
-                current_time = time.time()
-                elapsed_time = current_time - start_time
-
-                if elapsed_time <= 30:
-                    curr_detections = sv.Detections.from_ultralytics(model(
-                        frame, verbose=False)[0])
-                    detections = \
-                        curr_detections[curr_detections.confidence > 0.8]
-                    frame = box_annotator.annotate(scene=image, 
-                                                   detections=detections)
-
-                    cv2.putText(frame, "Calibrating...", (50, 50), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 100), 2)
-
-                    print(f"Calibrating... " + " " * 20, end='\r')
-
-                    cv2.imshow('Pose Detection', frame)  # Update the window
-                    elapsed_time = time.time() - start_time # Update elapsed time
-                    # Recolor back to BGR
-                    image.flags.writeable = True
-                    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-                else:
-                    is_calibrating = False # stop calibrating at 30 seconds
-                    print(f"FINISHED CALIBRATING!" + " " * 20, end='\r')
+            if not calibrated:
+                detections, frame, image, calibrated = \
+                    calibrate.calibrate_holds(start_time, detections, model, 
+                                              frame, box_annotator, image, 
+                                              calibrated)
 
             else:
                 # Recolor image to RGB
@@ -182,9 +160,9 @@ def pose_est_hold_detect():
                 image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-                # mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                #                 mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
-                #                 mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2))
+                mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                                mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
+                                mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2))
 
                 # Extract landmarks
                 try:
