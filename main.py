@@ -11,11 +11,16 @@ import time
 
 import calibrate
 
+# Defining global variables
+R_FOOT = ["right_ankle", "right_heel", "right_foot_index"]
+L_FOOT = ["left_ankle", "left_heel", "left_foot_index"]
+R_HAND = ["right_pinky", "right_index", "right_thumb", "right_wrist"]
+L_HAND = ["left_pinky", "left_index", "left_thumb", "left_wrist"]
+
 
 def calculate_angle(a,b,c):
-    a = np.array(a) # First
-    b = np.array(b) # Mid
-    c = np.array(c) # End
+    # First, Mid, End
+    a, b, c = np.array(a), np.array(b), np.array(c)
     
     radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], 
                                                             a[0]-b[0])
@@ -37,7 +42,7 @@ def display_hand(image, hand_pts):
                                  p[2] - center_3d[2]]) for p in hand_pts]
 
     scaling_factor = 3  # scaling factor must be int
-    radius_3d = scaling_factor * int(sum(distances ) / len(distances))
+    radius_3d = scaling_factor * int(sum(distances) / len(distances))
 
     # Draw the circle in 3D space (-1 thickness for a filled circle)
     cv2.circle(image, (int(center_3d[0]), int(center_3d[1])), radius_3d, 
@@ -79,31 +84,22 @@ def is_within_hold(limb, detection):
 
 def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts, 
                      left_hand_pts):
-    r_foot = ["right_ankle", "right_heel", "right_foot_index"]
-    l_foot = ["left_ankle", "left_heel", "left_foot_index"]
-    r_hand = ["right_pinky", "right_index","right_thumb", "right_wrist"]
-    l_hand = ["left_pinky", "left_index","left_thumb", "left_wrist"]
-    if limb in r_foot:
+    if limb in R_FOOT:
         return np.mean(right_foot_pts, axis=0)
-    elif limb in l_foot:
+    elif limb in L_FOOT:
         return np.mean(left_foot_pts, axis=0)
-    elif limb in r_hand:
+    elif limb in R_HAND:
         return np.mean(right_hand_pts, axis=0)
-    elif limb in l_hand:
+    elif limb in L_HAND:
         return np.mean(left_hand_pts, axis=0)
     return np.array([d[limb].x, d[limb].y], np.int32)
     
 # TODO: function that checks what holds the person is on
 # A hold corresponding to right hand, left hand, right foot, left foot
 def get_curr_position(d, detections):
-    extremities = ["right_foot", "left_foot", "right_hand","left_hand"]
+    extremities = ["right_foot", "left_foot", "right_hand", "left_hand"]
     for limb, coords in d.items():
         for detection in detections:
-            # yields opposite corners
-            x1, y1, x2, y2 = \
-                detection[0], detection[1], detection[2], detection[3]
-            limb_x, limb_y = coords.x, coords.y
-
             # Within bounds
             if (limb in extremities) and is_within_hold(coords, detection):
                 # save the coordinates
@@ -111,8 +107,9 @@ def get_curr_position(d, detections):
 
 def get_relative_position(center_limb_pt, rock_hold):
     # points of rock_hold
+    rock_hold_pos = rock_hold[0]
     x1, y1, x2, y2 = \
-        rock_hold[0][0], rock_hold[0][1], rock_hold[0][2], rock_hold[0][3]
+        rock_hold_pos[0], rock_hold_pos[1], rock_hold_pos[2], rock_hold_pos[3]
     # print("Rock_coords:", x1, y1, x2, y2)
     mean_rock_coord = np.mean(np.array([[x1, y1], [x2, y2]]), axis=0)
     # print("M:", mean_rock_coord)
@@ -283,8 +280,8 @@ def pose_est_hold_detect():
         cv2.destroyAllWindows()
 
 def main():
-    for lndmrk in mp_pose.PoseLandmark:
-        print(lndmrk)
+    # for lndmrk in mp_pose.PoseLandmark:
+    #     print(lndmrk)
     
     pose_est_hold_detect()
 
