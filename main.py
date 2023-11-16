@@ -108,7 +108,7 @@ def get_curr_position(d, detections):
                 # save the coordinates
                 pass
 
-def get_relative_position(center_limb_pt, rock_hold):
+def get_relative_distance(center_limb_pt, rock_hold):
     # points of rock_hold
     rock_hold_pos = rock_hold[0]
     x1, y1, x2, y2 = \
@@ -249,8 +249,9 @@ def pose_est_hold_detect():
                         point = get_center_point(d, "right_thumb",
                                                  right_foot_pts, left_foot_pts,
                                                  right_hand_pts, left_hand_pts)
-                        get_relative_position(point, detection)
-                        print(f"Relative position: {get_relative_position(point, detection)} " + " " * 20, end='\r')
+                        distance = get_relative_distance(point, detection)
+                        audio_feedback.play_distance(distance)
+                        print(f"Relative position: {distance} " + " " * 20, end='\r')
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
 
