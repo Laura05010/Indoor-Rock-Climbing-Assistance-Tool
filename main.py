@@ -12,6 +12,7 @@ import time
 
 import calibrate
 import find_routes
+import audio_feedback
 
 # Defining global variables
 R_FOOT = ["right_ankle", "right_heel", "right_foot_index"]
@@ -145,6 +146,8 @@ def pose_est_hold_detect():
                                               frame, box_annotator, image,
                                               calibrated)
                 find_routes.identify_routes(image, detections)
+                if calibrated:
+                    audio_feedback.calibrated_sound()
 
             else:
                 # Recolor image to RGB
