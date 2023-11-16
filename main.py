@@ -7,7 +7,6 @@ mp_pose = mp.solutions.pose
 from ultralytics import YOLO
 import supervision as sv
 
-
 import time
 
 import calibrate
