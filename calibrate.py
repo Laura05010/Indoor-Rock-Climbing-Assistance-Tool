@@ -9,12 +9,13 @@ def calibrate_holds(start_time, detections, model, frame, box_annotator, image,
     # break when you reach 30 seconds
     elapsed_time = time.time() - start_time
 
-    calibrate_time = 20
+    calibrate_time = 15
     if elapsed_time <= calibrate_time:
         detections = sv.Detections.from_ultralytics(model(frame,
                                                           verbose=False)[0])
         detections = detections[detections.confidence > 0.8]
-        frame = box_annotator.annotate(scene=image, detections=detections, skip_label=True)
+        frame = box_annotator.annotate(scene=image, detections=detections, 
+                                       skip_label=True)
 
         cv2.putText(frame, "Calibrating...", (50, 50), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 100), 2)

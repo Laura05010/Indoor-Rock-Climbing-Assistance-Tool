@@ -126,7 +126,8 @@ def pose_est_hold_detect():
     model = YOLO('bestHuge.pt')
     # box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
     dark_grey= sv.Color(64, 64, 64)
-    box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2, text_thickness=2, text_scale=1)
+    box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2, 
+                                    text_thickness=2, text_scale=1)
     detections = []
 
     ## Setup mediapipe instance
@@ -158,15 +159,20 @@ def pose_est_hold_detect():
                 results = pose.process(image)
 
                 # annotate the scene with the detections
-                frame = box_annotator.annotate(scene=image, detections=detections, skip_label=True)
+                frame = box_annotator.annotate(scene=image, 
+                                               detections=detections, 
+                                               skip_label=True)
 
                 # Recolor back to BGR
                 image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-                mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
-                                mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2))
+                mp_drawing.draw_landmarks(
+                    image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                    mp_drawing.DrawingSpec(
+                        color=(245,117,66), thickness=2, circle_radius=2),
+                    mp_drawing.DrawingSpec(
+                        color=(245,66,230), thickness=2, circle_radius=2))
 
                 # Extract landmarks
                 try:
