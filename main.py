@@ -7,9 +7,11 @@ mp_pose = mp.solutions.pose
 from ultralytics import YOLO
 import supervision as sv
 
+
 import time
 
 import calibrate
+import find_routes
 
 # Defining global variables
 R_FOOT = ["right_ankle", "right_heel", "right_foot_index"]
@@ -22,7 +24,7 @@ def calculate_angle(a,b,c):
     # First, Mid, End
     a, b, c = np.array(a), np.array(b), np.array(c)
     
-    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], 
+    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1],
                                                             a[0]-b[0])
     angle = np.abs(radians*180.0/np.pi)
     
@@ -82,7 +84,7 @@ def is_within_hold(limb, detection):
     # Check if limb coordinates are within the bounding box
     return x1 <= x <= x2 and y1 <= y <= y2
 
-def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts, 
+def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
                      left_hand_pts):
     if limb in R_FOOT:
         return np.mean(right_foot_pts, axis=0)
@@ -93,7 +95,7 @@ def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
     elif limb in L_HAND:
         return np.mean(left_hand_pts, axis=0)
     return np.array([d[limb].x, d[limb].y], np.int32)
-    
+
 # TODO: function that checks what holds the person is on
 # A hold corresponding to right hand, left hand, right foot, left foot
 def get_curr_position(d, detections):
@@ -121,7 +123,9 @@ def pose_est_hold_detect():
     cap = cv2.VideoCapture(0)
 
     model = YOLO('bestHuge.pt')
-    box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
+    # box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
+    dark_grey= sv.Color(64, 64, 64)
+    box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2, text_thickness=2, text_scale=1)
     detections = []
 
     ## Setup mediapipe instance
@@ -137,9 +141,10 @@ def pose_est_hold_detect():
 
             if not calibrated:
                 detections, frame, image, calibrated = \
-                    calibrate.calibrate_holds(start_time, detections, model, 
-                                              frame, box_annotator, image, 
+                    calibrate.calibrate_holds(start_time, detections, model,
+                                              frame, box_annotator, image,
                                               calibrated)
+                find_routes.identify_routes(image, detections)
 
             else:
                 # Recolor image to RGB
@@ -150,8 +155,7 @@ def pose_est_hold_detect():
                 results = pose.process(image)
 
                 # annotate the scene with the detections
-                frame = box_annotator.annotate(scene=image, 
-                                               detections=detections)
+                frame = box_annotator.annotate(scene=image, detections=detections, skip_label=True)
 
                 # Recolor back to BGR
                 image.flags.writeable = True
@@ -199,10 +203,10 @@ def pose_est_hold_detect():
                         landmarks[pose_landmark.RIGHT_THUMB.value]
                     d["right_wrist"] = \
                         landmarks[pose_landmark.RIGHT_WRIST.value]
-                    right_hand_pts = hand_pts(d["right_pinky"], 
-                                              d["right_index"], 
-                                              d["right_thumb"], 
-                                              d["right_wrist"], 
+                    right_hand_pts = hand_pts(d["right_pinky"],
+                                              d["right_index"],
+                                              d["right_thumb"],
+                                              d["right_wrist"],
                                               frame_shape_1, frame_shape_0)
 
                     # Lower body coordinates
@@ -214,8 +218,8 @@ def pose_est_hold_detect():
                     d["left_heel"] = landmarks[pose_landmark.LEFT_HEEL.value]
                     d["left_foot_index"] = \
                         landmarks[pose_landmark.LEFT_FOOT_INDEX.value]
-                    left_foot_pts = foot_pts(d["left_ankle"], d["left_heel"], 
-                                             d["left_foot_index"], 
+                    left_foot_pts = foot_pts(d["left_ankle"], d["left_heel"],
+                                             d["left_foot_index"],
                                              frame_shape_1, frame_shape_0)
 
                     # RIGHT FOOT
@@ -224,8 +228,8 @@ def pose_est_hold_detect():
                     d["right_heel"] = landmarks[pose_landmark.RIGHT_HEEL.value]
                     d["right_foot_index"] = \
                         landmarks[pose_landmark.RIGHT_FOOT_INDEX.value]
-                    right_foot_pts = foot_pts(d["right_ankle"], d["right_heel"], 
-                                              d["right_foot_index"], 
+                    right_foot_pts = foot_pts(d["right_ankle"], d["right_heel"],
+                                              d["right_foot_index"],
                                               frame_shape_1, frame_shape_0)
 
                     # Display Coordinates
@@ -233,8 +237,8 @@ def pose_est_hold_detect():
 
                     for detection in detections:
                         # currently only for right_hand
-                        point = get_center_point(d, "right_thumb", 
-                                                 right_foot_pts, left_foot_pts, 
+                        point = get_center_point(d, "right_thumb",
+                                                 right_foot_pts, left_foot_pts,
                                                  right_hand_pts, left_hand_pts)
                         get_relative_position(point, detection)
                         print(f"Relative position: {get_relative_position(point, detection)} " + " " * 20, end='\r')
@@ -282,7 +286,6 @@ def pose_est_hold_detect():
 def main():
     # for lndmrk in mp_pose.PoseLandmark:
     #     print(lndmrk)
-    
     pose_est_hold_detect()
 
 if "__main__" == __name__:
