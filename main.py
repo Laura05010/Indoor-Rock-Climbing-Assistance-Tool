@@ -125,7 +125,7 @@ def pose_est_hold_detect():
     model = YOLO('bestHuge.pt')
     # box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
     dark_grey= sv.Color(64, 64, 64)
-    box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2, 
+    box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2,
                                     text_thickness=2, text_scale=1)
     detections = []
 
@@ -158,8 +158,8 @@ def pose_est_hold_detect():
                 results = pose.process(image)
 
                 # annotate the scene with the detections
-                frame = box_annotator.annotate(scene=image, 
-                                               detections=detections, 
+                frame = box_annotator.annotate(scene=image,
+                                               detections=detections,
                                                skip_label=True)
 
                 # Recolor back to BGR
