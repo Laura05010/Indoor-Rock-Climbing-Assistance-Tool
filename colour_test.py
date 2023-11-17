@@ -43,16 +43,6 @@ black_lower = np.array([0, 0, 0]) # GOOD
 black_upper = np.array([180, 55, 40]) # GOOD
 
 
-def visualize_limits(hsv_lower, hsv_upper):
-    lo_square = np.full((10, 10, 3), hsv_lower, dtype=np.uint8) / 255.0
-    do_square = np.full((10, 10, 3), hsv_lower, dtype=np.uint8) / 255.0
-
-    plt.subplot(1, 2, 1)
-    plt.imshow(hsv_to_rgb(do_square))
-    plt.subplot(1, 2, 2)
-    plt.imshow(hsv_to_rgb(lo_square))
-    plt.show()
-
 
 def visualize_hsv_range(hsv_lower, hsv_upper):
     hue_values = np.linspace(hsv_lower[0], hsv_upper[0], 100)  # Creating a range of hue values
@@ -74,6 +64,7 @@ def visualize_hsv_range(hsv_lower, hsv_upper):
 
 
 
-visualize_hsv_range(blue_lower, blue_upper)
+visualize_hsv_range(orange_lower, orange_upper)
 # visualize_limits(black_lower, black_upper)
+
 

@@ -136,8 +136,6 @@ def identify_routes(image, detections):
         routes[color] = detections_instance
     return routes
 
-def display_routes(routes):
-    pass
 
 colours = {"Red": (0, 0, 255), "Orange":(0, 165, 255), "Yellow":(0, 255, 255), \
            "Green":(0, 255, 0), "Blue":(255, 0, 0), "Pink":(203, 192, 255), \
