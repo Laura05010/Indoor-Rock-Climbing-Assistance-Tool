@@ -107,6 +107,35 @@ def get_curr_position(d, detections):
                 # save the coordinates
                 pass
 
+def find_closest_hold(hand_point, detections):
+    closest_detection = None
+    min_distance = float('inf')
+    for detection in detections:
+        distance = get_relative_distance(hand_point, detection)
+        if distance < min_distance:
+            min_distance = distance
+            closest_detection = detection
+    return closest_detection
+
+def find_next_target_hold(hand_point, current_hold, detections, held_holds):
+    next_target = None
+    min_distance = float('inf')
+    current_y = np.mean([current_hold[1], current_hold[3]])  # Average y of current hold
+
+    for detection in detections:
+        if detection in held_holds:
+            continue  # Skip already held holds
+
+        detection_y = np.mean([detection[1], detection[3]])
+        if detection_y < current_y:  # Hold is higher on the y-axis
+            distance = get_relative_distance(hand_point, detection)
+            if distance < min_distance:
+                min_distance = distance
+                next_target = detection
+
+    return next_target
+
+
 def get_relative_distance(center_limb_pt, rock_hold):
     # points of rock_hold
     rock_hold_pos = rock_hold[0]
@@ -120,7 +149,7 @@ def get_relative_distance(center_limb_pt, rock_hold):
 
 def pose_est_hold_detect():
     # JUST THE POSE
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
 
     model = YOLO('bestHuge.pt')
     # box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
@@ -128,6 +157,9 @@ def pose_est_hold_detect():
     box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2,
                                     text_thickness=2, text_scale=1)
     detections = []
+    next_target_hold = None
+    held_holds = []
+    GRAB_THRESHOLD = 50  # How far away does the hand need to be to constitute a grab
 
     ## Setup mediapipe instance
     with mp_pose.Pose(min_detection_confidence=0.8,
@@ -240,17 +272,42 @@ def pose_est_hold_detect():
                                               d["right_foot_index"],
                                               frame_shape_1, frame_shape_0)
 
-                    # Display Coordinates
-                    # display_coords(d)
+                    right_thumb_point = get_center_point(d, "right_thumb",
+                                             right_foot_pts, left_foot_pts,
+                                             right_hand_pts, left_hand_pts)
+                    
+                    if not held_holds:
+                        next_target_hold = find_closest_hold(right_thumb_point, detections)
+                    else:
+                        next_target_hold = find_next_target_hold(right_thumb_point, held_holds[-1], detections, held_holds)
+                    
+                    if next_target_hold:
+                        distance_to_next_hold = get_relative_distance(right_thumb_point, next_target_hold)
+                        print(f"Distance to next hold: {distance_to_next_hold:.2f} units", end='\r')
 
+                        # Check if the distance is less than the threshold
+                        if distance_to_next_hold < GRAB_THRESHOLD:
+                            if next_target_hold not in held_holds:
+                                held_holds.append(next_target_hold)
+                                print("Grabbing hold!")
+                    
+                    '''
                     for detection in detections:
                         # currently only for right_hand
                         point = get_center_point(d, "right_thumb",
-                                                 right_foot_pts, left_foot_pts,
-                                                 right_hand_pts, left_hand_pts)
+                                                right_foot_pts, left_foot_pts,
+                                                right_hand_pts, left_hand_pts)
                         distance = get_relative_distance(point, detection)
+
                         audio_feedback.play_distance(distance)
+
+                        # Check if the distance is less than the threshold
+                        if distance < GRAB_THRESHOLD:
+                            print("Grabbing hold!")
+                        
                         print(f"Relative position: {distance} " + " " * 20, end='\r')
+                    '''
+                    
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
 
