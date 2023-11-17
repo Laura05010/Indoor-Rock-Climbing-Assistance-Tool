@@ -135,8 +135,6 @@ def identify_routes(image, detections):
         # convert to detections type
         detections_instance = Detections(detections_array)
         routes[color] = detections_instance
-    
-    print(routes)
     return routes
 
 def display_routes(routes):

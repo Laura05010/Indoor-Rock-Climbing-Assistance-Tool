@@ -145,7 +145,6 @@ def pose_est_hold_detect():
                     calibrate.calibrate_holds(start_time, detections, model,
                                               frame, box_annotator, image,
                                               calibrated)
-                find_routes.identify_routes(image, detections)
                 if calibrated:
                     audio_feedback.calibrated_sound()
 
@@ -165,6 +164,8 @@ def pose_est_hold_detect():
                 # Recolor back to BGR
                 image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+                routes = find_routes.identify_routes(image, detections) # gives you a dictionary of detections grouped by colour
 
                 mp_drawing.draw_landmarks(
                     image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
