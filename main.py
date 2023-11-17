@@ -107,15 +107,14 @@ def get_curr_position(d, detections):
                 # save the coordinates
                 pass
 
-def find_closest_hold(hand_point, detections, held_holds):
+def find_closest_hold(hand_point, detections):
     closest_detection = None
     min_distance = float('inf')
     for detection in detections:
-        if detection not in held_holds:
-            distance = get_relative_distance(hand_point, detection)
-            if distance < min_distance:
-                min_distance = distance
-                closest_detection = detection
+        distance = get_relative_distance(hand_point, detection)
+        if distance < min_distance:
+            min_distance = distance
+            closest_detection = detection
     return closest_detection
 
 
@@ -161,7 +160,7 @@ def pose_est_hold_detect():
     detections = []
     next_target_hold = None
     held_holds = []
-    GRAB_THRESHOLD = 50  # How far away does the hand need to be to constitute a grab
+    GRAB_THRESHOLD = 100  # How far away does the hand need to be to constitute a grab
 
     ## Setup mediapipe instance
     with mp_pose.Pose(min_detection_confidence=0.8,
@@ -283,14 +282,16 @@ def pose_est_hold_detect():
                                          right_hand_pts, left_hand_pts)
 
                     # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(right_thumb_point, detections, held_holds)
+                    next_target_hold = find_closest_hold(right_thumb_point, detections)
+
+                    print(f"Next target hold: {next_target_hold}")
 
                     if next_target_hold:
                         distance_to_next_hold = get_relative_distance(right_thumb_point, next_target_hold)
                         print(f"Distance to next hold: {distance_to_next_hold:.2f} units", end='\r')
 
-                        if distance_to_next_hold < GRAB_THRESHOLD and next_target_hold not in held_holds:
-                            held_holds.append(next_target_hold)
+                        if distance_to_next_hold < GRAB_THRESHOLD:
+                            detections.remove(next_target_hold)
                             print("\nHold grabbed!")
                     
 
