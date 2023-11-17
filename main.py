@@ -107,34 +107,20 @@ def get_curr_position(d, detections):
                 # save the coordinates
                 pass
 
-def find_closest_hold(hand_point, detections):
+def find_closest_hold(hand_point, detections, grabbed_areas):
     closest_detection = None
     min_distance = float('inf')
+    print(f"Detections: {detections}\n", end='\r')
+    print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
     for detection in detections:
+        if is_close_to_grabbed_area(detection, grabbed_areas):
+            continue  # Ignore detections close to grabbed areas
+
         distance = get_relative_distance(hand_point, detection)
         if distance < min_distance:
             min_distance = distance
             closest_detection = detection
     return closest_detection
-
-
-def find_next_target_hold(hand_point, current_hold, detections, held_holds):
-    next_target = None
-    min_distance = float('inf')
-    current_y = np.mean([current_hold[1], current_hold[3]])  # Average y of current hold
-
-    for detection in detections:
-        if detection in held_holds:
-            continue  # Skip already held holds
-
-        detection_y = np.mean([detection[1], detection[3]])
-        if detection_y < current_y:  # Hold is higher on the y-axis
-            distance = get_relative_distance(hand_point, detection)
-            if distance < min_distance:
-                min_distance = distance
-                next_target = detection
-
-    return next_target
 
 
 def get_relative_distance(center_limb_pt, rock_hold):
@@ -148,6 +134,13 @@ def get_relative_distance(center_limb_pt, rock_hold):
     # print("C:", center_limb_pt[:2])
     return np.linalg.norm(abs(center_limb_pt[:2] - mean_rock_coord))
 
+def is_close_to_grabbed_area(detection, grabbed_areas, threshold=50):
+    print("Is close to grabbed area?\n", end='\r"')
+    for area in grabbed_areas:
+        if np.linalg.norm(np.array(area[:2]) - np.array(detection[:2])) < threshold:
+            return True
+    return False
+
 def pose_est_hold_detect():
     # JUST THE POSE
     cap = cv2.VideoCapture(2)
@@ -159,7 +152,8 @@ def pose_est_hold_detect():
                                     text_thickness=2, text_scale=1)
     detections = []
     next_target_hold = None
-    held_holds = []
+    grabbed_areas = []  # List to store the coordinates of grabbed holds
+    GRAB_AREA_THRESHOLD = 50  # Define a proximity threshold
     GRAB_THRESHOLD = 100  # How far away does the hand need to be to constitute a grab
 
     ## Setup mediapipe instance
@@ -280,19 +274,23 @@ def pose_est_hold_detect():
                     right_thumb_point = get_center_point(d, "right_thumb",
                                          right_foot_pts, left_foot_pts,
                                          right_hand_pts, left_hand_pts)
+                    
+                    print("--------------------\n", end='\r')
 
                     # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(right_thumb_point, detections)
+                    next_target_hold = find_closest_hold(right_thumb_point, detections, grabbed_areas)
 
-                    print(f"Next target hold: {next_target_hold}")
+                    print(f"Next target hold: {next_target_hold}\n", end='\r')
 
-                    if next_target_hold:
-                        distance_to_next_hold = get_relative_distance(right_thumb_point, next_target_hold)
-                        print(f"Distance to next hold: {distance_to_next_hold:.2f} units", end='\r')
+                    distance_to_next_hold = get_relative_distance(right_thumb_point, next_target_hold)
+                    print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
 
-                        if distance_to_next_hold < GRAB_THRESHOLD:
-                            detections.remove(next_target_hold)
-                            print("\nHold grabbed!")
+                    if distance_to_next_hold < GRAB_THRESHOLD:
+                        # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
+                        print("Hold grabbed!\n", end='\r')
+                        grabbed_areas.append(next_target_hold)
+                    
+                    print("--------------------\n", end='\r')
                     
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
