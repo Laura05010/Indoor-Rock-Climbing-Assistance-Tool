@@ -107,15 +107,17 @@ def get_curr_position(d, detections):
                 # save the coordinates
                 pass
 
-def find_closest_hold(hand_point, detections):
+def find_closest_hold(hand_point, detections, held_holds):
     closest_detection = None
     min_distance = float('inf')
     for detection in detections:
-        distance = get_relative_distance(hand_point, detection)
-        if distance < min_distance:
-            min_distance = distance
-            closest_detection = detection
+        if detection not in held_holds:
+            distance = get_relative_distance(hand_point, detection)
+            if distance < min_distance:
+                min_distance = distance
+                closest_detection = detection
     return closest_detection
+
 
 def find_next_target_hold(hand_point, current_hold, detections, held_holds):
     next_target = None
@@ -276,37 +278,20 @@ def pose_est_hold_detect():
                                              right_foot_pts, left_foot_pts,
                                              right_hand_pts, left_hand_pts)
                     
-                    if not held_holds:
-                        next_target_hold = find_closest_hold(right_thumb_point, detections)
-                    else:
-                        next_target_hold = find_next_target_hold(right_thumb_point, held_holds[-1], detections, held_holds)
-                    
+                    right_thumb_point = get_center_point(d, "right_thumb",
+                                         right_foot_pts, left_foot_pts,
+                                         right_hand_pts, left_hand_pts)
+
+                    # Find the closest hold that hasn't been grabbed yet
+                    next_target_hold = find_closest_hold(right_thumb_point, detections, held_holds)
+
                     if next_target_hold:
                         distance_to_next_hold = get_relative_distance(right_thumb_point, next_target_hold)
                         print(f"Distance to next hold: {distance_to_next_hold:.2f} units", end='\r')
 
-                        # Check if the distance is less than the threshold
-                        if distance_to_next_hold < GRAB_THRESHOLD:
-                            if next_target_hold not in held_holds:
-                                held_holds.append(next_target_hold)
-                                print("Grabbing hold!")
-                    
-                    '''
-                    for detection in detections:
-                        # currently only for right_hand
-                        point = get_center_point(d, "right_thumb",
-                                                right_foot_pts, left_foot_pts,
-                                                right_hand_pts, left_hand_pts)
-                        distance = get_relative_distance(point, detection)
-
-                        audio_feedback.play_distance(distance)
-
-                        # Check if the distance is less than the threshold
-                        if distance < GRAB_THRESHOLD:
-                            print("Grabbing hold!")
-                        
-                        print(f"Relative position: {distance} " + " " * 20, end='\r')
-                    '''
+                        if distance_to_next_hold < GRAB_THRESHOLD and next_target_hold not in held_holds:
+                            held_holds.append(next_target_hold)
+                            print("\nHold grabbed!")
                     
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
