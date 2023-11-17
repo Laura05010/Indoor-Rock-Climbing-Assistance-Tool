@@ -145,6 +145,7 @@ def pose_est_hold_detect():
                     calibrate.calibrate_holds(start_time, detections, model,
                                               frame, box_annotator, image,
                                               calibrated)
+                routes = find_routes.identify_routes(image, detections) # gives you a dictionary of detections grouped by colour
                 if calibrated:
                     audio_feedback.calibrated_sound()
 
@@ -165,7 +166,7 @@ def pose_est_hold_detect():
                 image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-                routes = find_routes.identify_routes(image, detections) # gives you a dictionary of detections grouped by colour
+                # routes = find_routes.identify_routes(image, detections) # gives you a dictionary of detections grouped by colour
 
                 mp_drawing.draw_landmarks(
                     image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
@@ -199,8 +200,8 @@ def pose_est_hold_detect():
                     d["left_index"] = landmarks[pose_landmark.LEFT_INDEX.value]
                     d["left_thumb"] = landmarks[pose_landmark.LEFT_THUMB.value]
                     d["left_wrist"] = landmarks[pose_landmark.LEFT_WRIST.value]
-                    left_hand_pts = hand_pts(d["left_pinky"], d["left_index"], 
-                                             d["left_thumb"], d["left_wrist"], 
+                    left_hand_pts = hand_pts(d["left_pinky"], d["left_index"],
+                                             d["left_thumb"], d["left_wrist"],
                                              frame_shape_1, frame_shape_0)
 
                     # RIGHT HAND
