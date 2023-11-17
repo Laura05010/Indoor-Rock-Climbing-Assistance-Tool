@@ -7,37 +7,37 @@
 import numpy as np
 import cv2
 from supervision.detection.core import Detections
-COVER_AREA = 0.28 # area that color needs to be cover for the hold to be that color!
+COVER_AREA = 0.2 # area that color needs to be cover for the hold to be that color!
 
 # COLOR RANGES
 
 # Red color range
-red_lower = np.array([161, 155, 84], np.uint8)
-red_upper = np.array([179, 255, 255], np.uint8)
+red_lower = np.array([0, 100, 100], np.uint8)
+red_upper = np.array([10, 255, 255], np.uint8)
 
 # Orange color range (including lighter tones)
-orange_lower = np.array([5, 100, 100], np.uint8)
-orange_upper = np.array([25, 255, 255], np.uint8)
+orange_lower = np.array([1, 190, 200], np.uint8)
+orange_upper = np.array([18, 255, 255], np.uint8)
 
 # Yellow color range
-yellow_lower = np.array([25, 146, 190], np.uint8)
-yellow_upper = np.array([62, 174, 250], np.uint8)
+yellow_lower = np.array([20, 100, 100], np.uint8)
+yellow_upper = np.array([35, 255, 255], np.uint8)
 
 # Green color range
-green_lower = np.array([25, 52, 72], np.uint8)
-green_upper = np.array([102, 255, 255], np.uint8)
+green_lower = np.array([40, 50, 100], np.uint8)
+green_upper = np.array([90, 255, 255], np.uint8)
 
 # Blue color range
-blue_lower = np.array([94, 80, 2], np.uint8)
-blue_upper = np.array([126, 255, 255], np.uint8)
+blue_lower = np.array([95, 50, 50], np.uint8)
+blue_upper = np.array([120, 255, 255], np.uint8)
 
 # Pink color range
-pink_lower = np.array([140, 120, 70], np.uint8)
-pink_upper = np.array([170, 255, 255], np.uint8)
+pink_lower = np.array([155, 70, 200], np.uint8)
+pink_upper = np.array([175, 255, 255], np.uint8)
 
 # Purple color range
-purple_lower = np.array([121, 120, 70], np.uint8)
-purple_upper = np.array([139, 255, 255], np.uint8)
+purple_lower = np.array([115, 40, 40], np.uint8)
+purple_upper = np.array([145, 255, 255], np.uint8)
 
 # White color range
 white_lower = np.array([0, 0, 200], np.uint8)
@@ -45,11 +45,7 @@ white_upper = np.array([180, 30, 255], np.uint8)
 
 # Black color range
 black_lower = np.array([0, 0, 0], np.uint8)
-black_upper = np.array([180, 255, 20], np.uint8)
-
-# Adjusted Brown color range (excluding light yellow)
-brown_lower = np.array([21, 50, 50], np.uint8)
-brown_upper = np.array([32, 255, 255], np.uint8)
+black_upper = np.array([180, 55, 40], np.uint8)
 
 
 
@@ -71,7 +67,6 @@ def identify_routes(image, detections):
     purple_mask = cv2.inRange(hsvFrame, purple_lower, purple_upper)
     white_mask = cv2.inRange(hsvFrame, white_lower, white_upper)
     black_mask = cv2.inRange(hsvFrame, black_lower, black_upper)
-    brown_mask = cv2.inRange(hsvFrame, brown_lower, brown_upper)
 
 
     # Find contours for each color mask
@@ -84,7 +79,6 @@ def identify_routes(image, detections):
     purple_contours, _ = cv2.findContours(purple_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     white_contours, _ = cv2.findContours(white_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     black_contours, _ = cv2.findContours(black_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    brown_contours, _ = cv2.findContours(brown_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     routes = {} # dictionary of routes :)
 
@@ -108,7 +102,7 @@ def identify_routes(image, detections):
         blue_detection = identify_blue_hold(image, blue_contours, detection)
         if blue_detection:
             routes.setdefault("blue", []).extend([detection])
-    
+
         pink_detection = identify_pink_hold(image, pink_contours, detection)
         if pink_detection:
             routes.setdefault("pink", []).extend([detection])
@@ -125,16 +119,24 @@ def identify_routes(image, detections):
         if black_detection:
             routes.setdefault("black", []).extend([detection])
 
-        brown_detection = identify_brown_hold(image, brown_contours, detection)
-        if brown_detection:
-            routes.setdefault("brown", []).extend([detection])
+
+
 
     # Modify the routes dictionary to convert detection lists to Detections instances
-    # TODO
-    # for color, detection_list in routes.items():
-    #     detections_instance = Detections(detection_list)
-    #     routes[color] = detections_instance
+    for color, detection_list in routes.items():
+        # Extract all bounding box coordinates
+        bounding_boxes = [detection[0] for detection in detection_list]
+        detections_array = np.array(bounding_boxes)
 
+        # Ensure the shape of array is (n, 4)
+        if detections_array.ndim != 2 or detections_array.shape[1] != 4:
+            raise ValueError(f"Invalid shape for {color} detections. Expected (n, 4) array.")
+
+        # convert to detections type
+        detections_instance = Detections(detections_array)
+        routes[color] = detections_instance
+    
+    print(routes)
     return routes
 
 def display_routes(routes):
@@ -348,24 +350,4 @@ def identify_black_hold(image, black_contours, detection):
     if its_black:
         return detection
     return None
-
-def identify_brown_hold(image, brown_contours, detection):
-    detection_coordinates = detection[0]
-    area = calculate_area(detection_coordinates)
-
-    its_brown = False
-
-    if area > 300:  # area threshold for holds
-        x1, y1, x2, y2 = detection_coordinates
-        # Check for brown holds
-        for brown_contour in brown_contours:
-            brown_area = cv2.contourArea(brown_contour)
-            if brown_area  >=  (COVER_AREA * area):  # making sure color is covering most of the box
-                color_x, color_y, color_w, color_h = cv2.boundingRect(brown_contour)
-                if x1 <= color_x <= x2 and y1 <= color_y <= y2:
-                    its_brown = True
-                    # Brown hold found within detection, process it
-                    x, y, w, h = cv2.boundingRect(brown_contour)
-                    image = cv2.rectangle(image, (x, y), (x + w, y + h), (32, 255, 255), 2)
-                    cv2.putText(image, "Brown", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (32, 255, 255))
 
