@@ -27,7 +27,7 @@ def calibrated_sound() -> None:
     play(0, 1, 0)
 
 def play_distance(distance) -> None:
-    play((3 * math.exp(-((0.007 * distance) ** 2)) + 1) * C_NATURAL, 0.2, 0.1)
+    play((3 * math.exp(-((0.007 * distance) ** 2)) + 1) * C_NATURAL, 0.1, 0.1)
 
 def main() -> None:
     """

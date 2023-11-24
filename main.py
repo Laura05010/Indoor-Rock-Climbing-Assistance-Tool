@@ -7,6 +7,8 @@ mp_pose = mp.solutions.pose
 from ultralytics import YOLO
 import supervision as sv
 
+from queue import Queue
+import threading
 import time
 
 import calibrate
@@ -118,7 +120,23 @@ def get_relative_distance(center_limb_pt, rock_hold):
     # print("C:", center_limb_pt[:2])
     return np.linalg.norm(abs(center_limb_pt[:2] - mean_rock_coord))
 
-def pose_est_hold_detect():
+def start_afm(audio_queue):
+    """
+    Create and run the audio feedback thread
+    """
+    audio_thread =threading.Thread(target=audio_feedback_manager, 
+                                   args=(audio_queue, ), daemon=True)
+    audio_thread.start()
+
+def audio_feedback_manager(audio_queue):
+    while True:
+        distance = audio_queue.get()  # Accessing the global audio_queue
+        audio_feedback.play_distance(distance)
+        audio_queue.task_done()
+
+
+# def pose_est_hold_detect():
+def pose_est_hold_detect(audio_queue):
     # JUST THE POSE
     cap = cv2.VideoCapture(0)
 
@@ -135,6 +153,7 @@ def pose_est_hold_detect():
         start_time = time.time()
         calibrated = False # Keeps track if you are at calibration phrase
 
+        i = 0
         while cap.isOpened():
             ret, frame = cap.read()
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -148,6 +167,8 @@ def pose_est_hold_detect():
                 routes = find_routes.identify_routes(image, detections) # gives you a dictionary of detections grouped by colour
                 if calibrated:
                     audio_feedback.calibrated_sound()
+                    start_afm(audio_queue)
+                    # a = 0
 
             else:
                 # Recolor image to RGB
@@ -251,7 +272,9 @@ def pose_est_hold_detect():
                                                  right_foot_pts, left_foot_pts,
                                                  right_hand_pts, left_hand_pts)
                         distance = get_relative_distance(point, detection)
-                        audio_feedback.play_distance(distance)
+                        # audio_feedback.play_distance(distance)
+                        if i % 5 == 0:
+                            audio_queue.put(distance)
                         print(f"Relative position: {distance} " + " " * 20, end='\r')
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
@@ -281,6 +304,8 @@ def pose_est_hold_detect():
                         color=(245,117,66), thickness=2, circle_radius=2),
                     mp_drawing.DrawingSpec(
                         color=(245,66,230), thickness=2, circle_radius=2))
+                
+                i += 1
 
                 # mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
                 #                 mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
@@ -295,9 +320,18 @@ def pose_est_hold_detect():
         cv2.destroyAllWindows()
 
 def main():
-    # for lndmrk in mp_pose.PoseLandmark:
-    #     print(lndmrk)
-    pose_est_hold_detect()
+    # Begin audio feedback thread
+    audio_queue = Queue()
+    # detection_thread = threading.Thread(target=pose_est_hold_detect, 
+    #                                     args=(audio_queue, ))
+    audio_thread =threading.Thread(target=audio_feedback_manager, 
+                                   args=(audio_queue, ), daemon=True)
+
+    # detection_thread.start()
+    audio_thread.start()
+
+    # pose_est_hold_detect()
+    pose_est_hold_detect(audio_queue)
 
 if "__main__" == __name__:
     main()
