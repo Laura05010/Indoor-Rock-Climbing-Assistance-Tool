@@ -133,6 +133,13 @@ def audio_feedback_manager(audio_queue):
         distance = audio_queue.get()  # Accessing the global audio_queue
         audio_feedback.play_distance(distance)
         audio_queue.task_done()
+    # while True:
+    #     distance = None
+    #     while audio_queue.empty():
+    #        distance = audio_queue.get()  # Accessing the global audio_queue
+    #        audio_queue.task_done()
+    #     if distance:
+    #         audio_feedback.play_distance(distance)
 
 
 # def pose_est_hold_detect():
@@ -275,6 +282,7 @@ def pose_est_hold_detect(audio_queue):
                         # audio_feedback.play_distance(distance)
                         if i % 5 == 0:
                             audio_queue.put(distance)
+                        # audio_queue.put(distance)
                         print(f"Relative position: {distance} " + " " * 20, end='\r')
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
