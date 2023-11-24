@@ -111,10 +111,10 @@ def find_closest_hold(hand_point, detections, grabbed_areas):
     closest_detection = None
     min_distance = float('inf')
     print(f"Detections: {detections}\n", end='\r')
-    print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
+    # print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
     for detection in detections:
-        if is_close_to_grabbed_area(detection, grabbed_areas):
-            continue  # Ignore detections close to grabbed areas
+        if is_exact_detection_in_list(detection, grabbed_areas):
+            continue
 
         distance = get_relative_distance(hand_point, detection)
         if distance < min_distance:
@@ -122,6 +122,14 @@ def find_closest_hold(hand_point, detections, grabbed_areas):
             closest_detection = detection
     return closest_detection
 
+def is_exact_detection_in_list(target_detection, detection_list):
+    for detection in detection_list:
+        # Assuming each detection is structured as [rock_hold_pos, ...]
+        det_coords = detection[0]  # Extract coordinates of the detection
+        target_coords = target_detection[0]  # Extract coordinates of the target detection
+        if np.array_equal(det_coords, target_coords):
+            return True
+    return False
 
 def get_relative_distance(center_limb_pt, rock_hold):
     # points of rock_hold
@@ -134,16 +142,9 @@ def get_relative_distance(center_limb_pt, rock_hold):
     # print("C:", center_limb_pt[:2])
     return np.linalg.norm(abs(center_limb_pt[:2] - mean_rock_coord))
 
-def is_close_to_grabbed_area(detection, grabbed_areas, threshold=50):
-    print("Is close to grabbed area?\n", end='\r"')
-    for area in grabbed_areas:
-        if np.linalg.norm(np.array(area[:2]) - np.array(detection[:2])) < threshold:
-            return True
-    return False
-
 def pose_est_hold_detect():
     # JUST THE POSE
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(0)
 
     model = YOLO('bestHuge.pt')
     # box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
@@ -199,6 +200,8 @@ def pose_est_hold_detect():
                         color=(245,117,66), thickness=2, circle_radius=2),
                     mp_drawing.DrawingSpec(
                         color=(245,66,230), thickness=2, circle_radius=2))
+
+                right_thumb_point = None
 
                 # Extract landmarks
                 try:
@@ -275,22 +278,7 @@ def pose_est_hold_detect():
                                          right_foot_pts, left_foot_pts,
                                          right_hand_pts, left_hand_pts)
                     
-                    print("--------------------\n", end='\r')
-
-                    # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(right_thumb_point, detections, grabbed_areas)
-
-                    print(f"Next target hold: {next_target_hold}\n", end='\r')
-
-                    distance_to_next_hold = get_relative_distance(right_thumb_point, next_target_hold)
-                    print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
-
-                    if distance_to_next_hold < GRAB_THRESHOLD:
-                        # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
-                        print("Hold grabbed!\n", end='\r')
-                        grabbed_areas.append(next_target_hold)
                     
-                    print("--------------------\n", end='\r')
                     
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
@@ -311,6 +299,34 @@ def pose_est_hold_detect():
 
                 except:
                     pass
+
+                try:
+
+                    print("--------------------\n", end='\r')
+
+                    # Find the closest hold that hasn't been grabbed yet
+                    next_target_hold = find_closest_hold(right_thumb_point, detections, grabbed_areas)
+
+                    next_target_hold = list(next_target_hold)
+
+                    print(f"Next target hold: {next_target_hold}\n", end='\r')
+                    print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
+
+                    distance_to_next_hold = get_relative_distance(right_thumb_point, next_target_hold)
+                    print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
+
+                    if distance_to_next_hold < GRAB_THRESHOLD:
+                        # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
+                        print("Hold grabbed!\n", end='\r')
+
+                        if not is_exact_detection_in_list(next_target_hold, grabbed_areas):
+                            grabbed_areas.append(next_target_hold)
+                        
+                    
+                    print("--------------------\n", end='\r')
+                
+                except Exception as exception:
+                    print(exception)
 
                 # print(results.pose_landmarks)
                 # Render detections
