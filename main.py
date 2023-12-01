@@ -340,33 +340,31 @@ def pose_est_hold_detect(audio_queue):
                     pass
 
                 try:
-                    n = 0
+                    print("--------------------\n", end='\r')
 
-                    # print("--------------------\n", end='\r')
+                    # Find the closest hold that hasn't been grabbed yet
+                    next_target_hold = find_closest_hold(right_thumb_point, 
+                                                         detections, 
+                                                         grabbed_areas)
 
-                    # # Find the closest hold that hasn't been grabbed yet
-                    # next_target_hold = find_closest_hold(right_thumb_point, 
-                    #                                      detections, 
-                    #                                      grabbed_areas)
+                    next_target_hold = list(next_target_hold)
 
-                    # next_target_hold = list(next_target_hold)
+                    print(f"Next target hold: {next_target_hold}\n", end='\r')
+                    print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
 
-                    # print(f"Next target hold: {next_target_hold}\n", end='\r')
-                    # print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
+                    distance_to_next_hold = get_relative_distance(
+                        right_thumb_point, next_target_hold)
+                    print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
 
-                    # distance_to_next_hold = get_relative_distance(
-                    #     right_thumb_point, next_target_hold)
-                    # print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
+                    if distance_to_next_hold < GRAB_THRESHOLD:
+                        # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
+                        print("Hold grabbed!\n", end='\r')
 
-                    # if distance_to_next_hold < GRAB_THRESHOLD:
-                    #     # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
-                    #     print("Hold grabbed!\n", end='\r')
+                        if not is_exact_detection_in_list(next_target_hold, 
+                                                          grabbed_areas):
+                            grabbed_areas.append(next_target_hold)
 
-                    #     if not is_exact_detection_in_list(next_target_hold, 
-                    #                                       grabbed_areas):
-                    #         grabbed_areas.append(next_target_hold)
-
-                    # print("--------------------\n", end='\r')
+                    print("--------------------\n", end='\r')
 
                 except Exception as exception:
                     print(exception)
