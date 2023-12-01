@@ -27,20 +27,29 @@ L_HAND = ["left_pinky", "left_index", "left_thumb", "left_wrist"]
 HAND_FOOT = 0
 RIGHT_LEFT = 0
 
-selected_limb = 'right_hand'
+# selected_limb = 'right_hand'
 limb_lock = threading.Lock()
 
 def on_press(key):
-    global selected_limb
+    # global selected_limb
+    global HAND_FOOT
+    global RIGHT_LEFT
+
     try:
         # Check if the pressed key is one of the designated keys
         if key.char == 'r':
             with limb_lock:
-                selected_limb = 'right_hand'
+                RIGHT_LEFT = 0
         elif key.char == 'l':
             with limb_lock:
-                selected_limb = 'left_hand'
+                RIGHT_LEFT = 1
         # Add other limbs...
+        if key.char == 'h':
+            with limb_lock:
+                HAND_FOOT = 0
+        elif key.char == 'l':
+            with limb_lock:
+                HAND_FOOT = 1
     except AttributeError:
         pass  # Handle special keys here if needed
 
@@ -368,10 +377,12 @@ def pose_est_hold_detect(audio_queue):
 
                     limb = None
 
-                    if selected_limb == 'right_hand':
+                    # if selected_limb == 'right_hand':
+                    if RIGHT_LEFT == 0 and HAND_FOOT == 0:
                         print("Right hand selected\n", end='\r')
                         limb = right_thumb_point
-                    elif selected_limb == 'left_hand':
+                    # elif selected_limb == 'left_hand':
+                    elif RIGHT_LEFT == 1 and HAND_FOOT == 0:
                         print("Left hand selected\n", end='\r')
                         limb = left_thumb_point
 
