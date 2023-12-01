@@ -294,14 +294,6 @@ def pose_est_hold_detect(audio_queue):
                     right_thumb_point = get_center_point(d, "right_thumb",
                                              right_foot_pts, left_foot_pts,
                                              right_hand_pts, left_hand_pts)
-                    
-                    right_thumb_point = get_center_point(d, "right_thumb",
-                                         right_foot_pts, left_foot_pts,
-                                         right_hand_pts, left_hand_pts)
-                    
-                    left_thumb_point = get_center_point(d, "left_thumb",
-                                             right_foot_pts, left_foot_pts,
-                                             right_hand_pts, left_hand_pts)
 
 
                     # Display Coordinates
