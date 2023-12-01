@@ -16,12 +16,30 @@ import find_routes
 import audio_feedback
 import audio_input
 
+from pynput import keyboard
+
 # Defining global variables
 R_FOOT = ["right_ankle", "right_heel", "right_foot_index"]
 L_FOOT = ["left_ankle", "left_heel", "left_foot_index"]
 R_HAND = ["right_pinky", "right_index", "right_thumb", "right_wrist"]
 L_HAND = ["left_pinky", "left_index", "left_thumb", "left_wrist"]
 
+selected_limb = 'right_hand'
+limb_lock = threading.Lock()
+
+def on_press(key):
+    global selected_limb
+    try:
+        # Check if the pressed key is one of the designated keys
+        if key.char == 'r':
+            with limb_lock:
+                selected_limb = 'right_hand'
+        elif key.char == 'l':
+            with limb_lock:
+                selected_limb = 'left_hand'
+        # Add other limbs...
+    except AttributeError:
+        pass  # Handle special keys here if needed
 
 def calculate_angle(a,b,c):
     # First, Mid, End
@@ -168,6 +186,7 @@ def audio_input_manager(extremities_queue):
 # def pose_est_hold_detect():
 def pose_est_hold_detect(audio_queue):
     # JUST THE POSE
+    global selected_limb
     cap = cv2.VideoCapture(0)
 
     model = YOLO('bestHuge.pt')
@@ -301,6 +320,10 @@ def pose_est_hold_detect(audio_queue):
                     right_thumb_point = get_center_point(d, "right_thumb",
                                              right_foot_pts, left_foot_pts,
                                              right_hand_pts, left_hand_pts)
+                    
+                    left_thumb_point = get_center_point(d, "left_thumb",
+                                             right_foot_pts, left_foot_pts,
+                                             right_hand_pts, left_hand_pts)
 
 
                     # Display Coordinates
@@ -343,8 +366,19 @@ def pose_est_hold_detect(audio_queue):
 
                     print("--------------------\n", end='\r')
 
+                    global selected_limb
+
+                    limb = None
+
+                    if selected_limb == 'right_hand':
+                        print("Right hand selected\n", end='\r')
+                        limb = right_thumb_point
+                    elif selected_limb == 'left_hand':
+                        print("Left hand selected\n", end='\r')
+                        limb = left_thumb_point
+
                     # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(right_thumb_point, 
+                    next_target_hold = find_closest_hold(limb, 
                                                          detections, 
                                                          grabbed_areas)
 
@@ -354,7 +388,7 @@ def pose_est_hold_detect(audio_queue):
                     print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
 
                     distance_to_next_hold = get_relative_distance(
-                        right_thumb_point, next_target_hold)
+                        limb, next_target_hold)
                     print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
 
                     if distance_to_next_hold < GRAB_THRESHOLD:
@@ -407,6 +441,11 @@ def main():
 
     # detection_thread.start()
     audio_feedback_thread.start()
+
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+
+    # threading.Thread(target=pose_est_hold_detect, args=(audio_queue,)).start()
 
     # pose_est_hold_detect()
     pose_est_hold_detect(audio_queue)
