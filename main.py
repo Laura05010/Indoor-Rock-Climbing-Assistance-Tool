@@ -23,6 +23,10 @@ R_HAND = ["right_pinky", "right_index", "right_thumb", "right_wrist"]
 L_HAND = ["left_pinky", "left_index", "left_thumb", "left_wrist"]
 
 
+HAND_FOOT = 0
+RIGHT_LEFT = 0
+
+
 def calculate_angle(a,b,c):
     # First, Mid, End
     a, b, c = np.array(a), np.array(b), np.array(c)
@@ -145,28 +149,27 @@ def get_relative_distance(center_limb_pt, rock_hold):
     # print("C:", center_limb_pt[:2])
     return np.linalg.norm(abs(center_limb_pt[:2] - mean_rock_coord))
 
-def start_afm(audio_queue):
-    """
-    Create and run the audio feedback thread
-    """
-    audio_thread = threading.Thread(target=audio_feedback_manager, 
-                                    args=(audio_queue, ), daemon=True)
-    audio_thread.start()
-
 def audio_feedback_manager(audio_queue):
     while True:
-        distance = audio_queue.get()  # Accessing the global audio_queue
+        distance = audio_queue.get()
         audio_feedback.play_distance(distance)
         audio_queue.task_done()
 
-def audio_input_manager(extremities_queue):
+def audio_input_manager():
+    global HAND_FOOT
+    global RIGHT_LEFT
+
     while True:
-        extremity = extremities_queue.get()  # Accessing the global audio_queue
-        # audio_feedback.play_distance(distance)
-        extremities_queue.task_done()
+        new_hf, new_rl = audio_input.input_audio()
+        if new_hf != -1 and new_rl != -1:
+            HAND_FOOT, RIGHT_LEFT = new_hf, new_rl
+        print("TESTING:", HAND_FOOT, RIGHT_LEFT)
 
 # def pose_est_hold_detect():
 def pose_est_hold_detect(audio_queue):
+    global HAND_FOOT
+    global RIGHT_LEFT
+
     # JUST THE POSE
     cap = cv2.VideoCapture(0)
 
@@ -310,15 +313,12 @@ def pose_est_hold_detect(audio_queue):
                                    [right_foot_pts, left_foot_pts]]
 
                     for detection in detections:
-                        # HARDCODING:
-                        hand_foot, right_left = 0, 0
-
-                        point = np.mean(extremities[hand_foot][right_left], 
+                        point = np.mean(extremities[HAND_FOOT][RIGHT_LEFT], 
                                         axis=0)
                         distance = get_relative_distance(point, detection)
                         if frame_counter % 5 == 0:
                             audio_queue.put(distance)
-                        print(f"Relative position: {distance} " + " " * 20, end='\r')
+                        # print(f"Relative position: {distance} " + " " * 20, end='\r')
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
 
@@ -340,33 +340,33 @@ def pose_est_hold_detect(audio_queue):
                     pass
 
                 try:
+                    n = 0
 
-                    print("--------------------\n", end='\r')
+                    # print("--------------------\n", end='\r')
 
-                    # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(right_thumb_point, 
-                                                         detections, 
-                                                         grabbed_areas)
+                    # # Find the closest hold that hasn't been grabbed yet
+                    # next_target_hold = find_closest_hold(right_thumb_point, 
+                    #                                      detections, 
+                    #                                      grabbed_areas)
 
-                    next_target_hold = list(next_target_hold)
+                    # next_target_hold = list(next_target_hold)
 
-                    print(f"Next target hold: {next_target_hold}\n", end='\r')
-                    print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
+                    # print(f"Next target hold: {next_target_hold}\n", end='\r')
+                    # print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
 
-                    distance_to_next_hold = get_relative_distance(
-                        right_thumb_point, next_target_hold)
-                    print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
+                    # distance_to_next_hold = get_relative_distance(
+                    #     right_thumb_point, next_target_hold)
+                    # print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
 
-                    if distance_to_next_hold < GRAB_THRESHOLD:
-                        # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
-                        print("Hold grabbed!\n", end='\r')
+                    # if distance_to_next_hold < GRAB_THRESHOLD:
+                    #     # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
+                    #     print("Hold grabbed!\n", end='\r')
 
-                        if not is_exact_detection_in_list(next_target_hold, 
-                                                          grabbed_areas):
-                            grabbed_areas.append(next_target_hold)
+                    #     if not is_exact_detection_in_list(next_target_hold, 
+                    #                                       grabbed_areas):
+                    #         grabbed_areas.append(next_target_hold)
 
-
-                    print("--------------------\n", end='\r')
+                    # print("--------------------\n", end='\r')
 
                 except Exception as exception:
                     print(exception)
@@ -397,16 +397,16 @@ def pose_est_hold_detect(audio_queue):
 def main():
     # Begin audio feedback thread
     audio_queue = Queue()
-    extremities_queue = Queue()
     # detection_thread = threading.Thread(target=pose_est_hold_detect, 
     #                                     args=(audio_queue, ))
     audio_feedback_thread = threading.Thread(target=audio_feedback_manager, 
                                     args=(audio_queue, ), daemon=True)
-    audio_input_thread = threading.Thread(target=audio_input_manager, 
-                                    args=(extremities_queue, ), daemon=True)
+    audio_input_thread = threading.Thread(target=audio_input_manager,
+                                          daemon=True)
 
     # detection_thread.start()
     audio_feedback_thread.start()
+    audio_input_thread.start()
 
     # pose_est_hold_detect()
     pose_est_hold_detect(audio_queue)
