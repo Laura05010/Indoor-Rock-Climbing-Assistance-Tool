@@ -14,6 +14,7 @@ import time
 import calibrate
 import find_routes
 import audio_feedback
+import audio_input
 
 # Defining global variables
 R_FOOT = ["right_ankle", "right_heel", "right_foot_index"]
@@ -389,6 +390,7 @@ def pose_est_hold_detect(audio_queue):
 def main():
     # Begin audio feedback thread
     audio_queue = Queue()
+    extremities_queue = Queue()
     # detection_thread = threading.Thread(target=pose_est_hold_detect, 
     #                                     args=(audio_queue, ))
     audio_thread =threading.Thread(target=audio_feedback_manager, 
