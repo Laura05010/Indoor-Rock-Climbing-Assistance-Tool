@@ -201,6 +201,7 @@ def pose_est_hold_detect():
                     mp_drawing.DrawingSpec(
                         color=(245,66,230), thickness=2, circle_radius=2))
 
+                left_thumb_point = None
                 right_thumb_point = None
 
                 # Extract landmarks
@@ -278,7 +279,9 @@ def pose_est_hold_detect():
                                          right_foot_pts, left_foot_pts,
                                          right_hand_pts, left_hand_pts)
                     
-                    
+                    left_thumb_point = get_center_point(d, "left_thumb",
+                                             right_foot_pts, left_foot_pts,
+                                             right_hand_pts, left_hand_pts)
                     
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
@@ -305,7 +308,7 @@ def pose_est_hold_detect():
                     print("--------------------\n", end='\r')
 
                     # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(right_thumb_point, detections, grabbed_areas)
+                    next_target_hold = find_closest_hold(left_thumb_point, detections, grabbed_areas)
 
                     next_target_hold = list(next_target_hold)
 
