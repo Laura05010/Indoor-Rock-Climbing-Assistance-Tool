@@ -159,6 +159,12 @@ def audio_feedback_manager(audio_queue):
         audio_feedback.play_distance(distance)
         audio_queue.task_done()
 
+def audio_input_manager(extremities_queue):
+    while True:
+        extremity = extremities_queue.get()  # Accessing the global audio_queue
+        # audio_feedback.play_distance(distance)
+        extremities_queue.task_done()
+
 # def pose_est_hold_detect():
 def pose_est_hold_detect(audio_queue):
     # JUST THE POSE
@@ -307,7 +313,8 @@ def pose_est_hold_detect(audio_queue):
                         # HARDCODING:
                         hand_foot, right_left = 0, 0
 
-                        point = np.mean(extremities[hand_foot][right_left], axis=0)
+                        point = np.mean(extremities[hand_foot][right_left], 
+                                        axis=0)
                         distance = get_relative_distance(point, detection)
                         if frame_counter % 5 == 0:
                             audio_queue.put(distance)
@@ -393,11 +400,13 @@ def main():
     extremities_queue = Queue()
     # detection_thread = threading.Thread(target=pose_est_hold_detect, 
     #                                     args=(audio_queue, ))
-    audio_thread = threading.Thread(target=audio_feedback_manager, 
+    audio_feedback_thread = threading.Thread(target=audio_feedback_manager, 
                                     args=(audio_queue, ), daemon=True)
+    audio_input_thread = threading.Thread(target=audio_input_manager, 
+                                    args=(extremities_queue, ), daemon=True)
 
     # detection_thread.start()
-    audio_thread.start()
+    audio_feedback_thread.start()
 
     # pose_est_hold_detect()
     pose_est_hold_detect(audio_queue)
