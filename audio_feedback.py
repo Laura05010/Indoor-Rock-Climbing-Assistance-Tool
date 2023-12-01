@@ -29,6 +29,10 @@ def calibrated_sound() -> None:
 def play_distance(distance) -> None:
     play((3 * math.exp(-((0.007 * distance) ** 2)) + 1) * C_NATURAL, 0.1, 0.1)
 
+def unknown_audio_input() -> None:
+    play(frequency=203.88, duration=0.1, volume=0.5)
+    play(frequency=203.88, duration=0.1, volume=0.5)
+
 def main() -> None:
     """
     Note: 
@@ -37,9 +41,7 @@ def main() -> None:
     """
 
     # Play baseline
-    # play()
-    play(frequency=203.88, duration=0.1, volume=0.5)
-    play(frequency=203.88, duration=0.1, volume=0.5)
+    play()
 
 if __name__ == "__main__":
     main()
