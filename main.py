@@ -15,6 +15,12 @@ import calibrate
 import find_routes
 import audio_feedback
 
+# Defining global variables
+R_FOOT = ["right_ankle", "right_heel", "right_foot_index"]
+L_FOOT = ["left_ankle", "left_heel", "left_foot_index"]
+R_HAND = ["right_pinky", "right_index", "right_thumb", "right_wrist"]
+L_HAND = ["left_pinky", "left_index", "left_thumb", "left_wrist"]
+
 
 def calculate_angle(a,b,c):
     # First, Mid, End
@@ -115,6 +121,18 @@ def is_exact_detection_in_list(target_detection, detection_list):
             return True
     return False
 
+def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
+                     left_hand_pts):
+    if limb in R_FOOT:
+        return np.mean(right_foot_pts, axis=0)
+    elif limb in L_FOOT:
+        return np.mean(left_foot_pts, axis=0)
+    elif limb in R_HAND:
+        return np.mean(right_hand_pts, axis=0)
+    elif limb in L_HAND:
+        return np.mean(left_hand_pts, axis=0)
+    return np.array([d[limb].x, d[limb].y], np.int32)
+
 def get_relative_distance(center_limb_pt, rock_hold):
     # points of rock_hold
     rock_hold_pos = rock_hold[0]
@@ -209,6 +227,8 @@ def pose_est_hold_detect(audio_queue):
                     landmarks = results.pose_landmarks.landmark
                     pose_landmark = mp_pose.PoseLandmark
 
+                    
+
                     d = {}  # body dictionary
 
                     # Upper body coordinates
@@ -270,6 +290,19 @@ def pose_est_hold_detect(audio_queue):
                     right_foot_pts = foot_pts(d["right_ankle"], d["right_heel"],
                                               d["right_foot_index"],
                                               frame_shape_1, frame_shape_0)
+                    
+                    right_thumb_point = get_center_point(d, "right_thumb",
+                                             right_foot_pts, left_foot_pts,
+                                             right_hand_pts, left_hand_pts)
+                    
+                    right_thumb_point = get_center_point(d, "right_thumb",
+                                         right_foot_pts, left_foot_pts,
+                                         right_hand_pts, left_hand_pts)
+                    
+                    left_thumb_point = get_center_point(d, "left_thumb",
+                                             right_foot_pts, left_foot_pts,
+                                             right_hand_pts, left_hand_pts)
+
 
                     # Display Coordinates
                     # display_coords(d)
@@ -311,7 +344,7 @@ def pose_est_hold_detect(audio_queue):
                     print("--------------------\n", end='\r')
 
                     # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(left_thumb_point, detections, grabbed_areas)
+                    next_target_hold = find_closest_hold(right_thumb_point, detections, grabbed_areas)
 
                     next_target_hold = list(next_target_hold)
 
