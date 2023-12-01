@@ -371,6 +371,9 @@ def pose_est_hold_detect(audio_queue):
                     pass
 
                 try:
+                    # NO OP
+                    n = 0
+
                     print("--------------------\n", end='\r')
 
                     global selected_limb
