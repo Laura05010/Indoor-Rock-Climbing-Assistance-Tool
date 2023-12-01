@@ -393,8 +393,8 @@ def main():
     extremities_queue = Queue()
     # detection_thread = threading.Thread(target=pose_est_hold_detect, 
     #                                     args=(audio_queue, ))
-    audio_thread =threading.Thread(target=audio_feedback_manager, 
-                                   args=(audio_queue, ), daemon=True)
+    audio_thread = threading.Thread(target=audio_feedback_manager, 
+                                    args=(audio_queue, ), daemon=True)
 
     # detection_thread.start()
     audio_thread.start()

@@ -4,7 +4,7 @@ import math
 
 C_NATURAL = 261.63
 
-def play(frequency, duration, volume=0.5):
+def play(frequency=C_NATURAL, duration=1, volume=0.5):
     """
     <frequency>:    frequency in Hz
     <duration>:     duration in seconds
@@ -37,7 +37,9 @@ def main() -> None:
     """
 
     # Play baseline
-    play()
+    # play()
+    play(frequency=203.88, duration=0.1, volume=0.5)
+    play(frequency=203.88, duration=0.1, volume=0.5)
 
 if __name__ == "__main__":
     main()
