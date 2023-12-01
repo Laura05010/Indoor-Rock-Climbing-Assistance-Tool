@@ -24,6 +24,9 @@ L_FOOT = ["left_ankle", "left_heel", "left_foot_index"]
 R_HAND = ["right_pinky", "right_index", "right_thumb", "right_wrist"]
 L_HAND = ["left_pinky", "left_index", "left_thumb", "left_wrist"]
 
+HAND_FOOT = 0
+RIGHT_LEFT = 0
+
 selected_limb = 'right_hand'
 limb_lock = threading.Lock()
 
@@ -40,10 +43,6 @@ def on_press(key):
         # Add other limbs...
     except AttributeError:
         pass  # Handle special keys here if needed
-
-HAND_FOOT = 0
-RIGHT_LEFT = 0
-
 
 def calculate_angle(a,b,c):
     # First, Mid, End
