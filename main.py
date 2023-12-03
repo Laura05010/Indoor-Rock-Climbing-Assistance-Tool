@@ -27,6 +27,8 @@ L_HAND = ["left_pinky", "left_index", "left_thumb", "left_wrist"]
 HAND_FOOT = 0
 RIGHT_LEFT = 0
 
+TARGET_HOLD = None
+
 # selected_limb = 'right_hand'
 limb_lock = threading.Lock()
 
@@ -195,6 +197,7 @@ def audio_input_manager():
 def pose_est_hold_detect(audio_queue):
     global HAND_FOOT
     global RIGHT_LEFT
+    global TARGET_HOLD
 
     # JUST THE POSE
     global selected_limb
@@ -343,13 +346,20 @@ def pose_est_hold_detect(audio_queue):
                     extremities = [[right_hand_pts, left_hand_pts],
                                    [right_foot_pts, left_foot_pts]]
 
-                    for detection in detections:
+                    # for detection in detections:
+                    #     point = np.mean(extremities[HAND_FOOT][RIGHT_LEFT], 
+                    #                     axis=0)
+                    #     distance = get_relative_distance(point, detection)
+                    #     if frame_counter % 5 == 0:
+                    #         audio_queue.put(distance)
+                    #     print(f"Relative position: {distance} " + " " * 20, end='\r')
+                    if TARGET_HOLD is not None:
                         point = np.mean(extremities[HAND_FOOT][RIGHT_LEFT], 
                                         axis=0)
-                        distance = get_relative_distance(point, detection)
+                        distance = get_relative_distance(point, TARGET_HOLD)
                         if frame_counter % 5 == 0:
                             audio_queue.put(distance)
-                        # print(f"Relative position: {distance} " + " " * 20, end='\r')
+                    
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
 
@@ -396,6 +406,8 @@ def pose_est_hold_detect(audio_queue):
 
                     next_target_hold = list(next_target_hold)
 
+                    TARGET_HOLD = next_target_hold
+
                     print(f"Next target hold: {next_target_hold}\n", end='\r')
                     print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
 
@@ -410,6 +422,7 @@ def pose_est_hold_detect(audio_queue):
                         if not is_exact_detection_in_list(next_target_hold, 
                                                           grabbed_areas):
                             grabbed_areas.append(next_target_hold)
+                            # audio_feedback.calibrated_sound()
 
                     print("--------------------\n", end='\r')
 

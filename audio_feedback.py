@@ -20,14 +20,14 @@ def play(frequency=C_NATURAL, duration=1, volume=0.5):
 
 def calibrated_sound() -> None:
     note = 4 * C_NATURAL
-    play(note, 0.1, 0.1)
-    play(note, 0.1, 0.1)
+    play(note, 0.1, 0.5)
+    play(note, 0.1, 0.5)
 
     # Wait 1 second
     play(0, 1, 0)
 
 def play_distance(distance) -> None:
-    play((3 * math.exp(-((0.007 * distance) ** 2)) + 1) * C_NATURAL, 0.1, 0.1)
+    play((3 * math.exp(-((0.007 * distance) ** 2)) + 1) * C_NATURAL, 0.1, 0.5)
 
 def unknown_audio_input() -> None:
     play(frequency=203.88, duration=0.1, volume=0.5)
