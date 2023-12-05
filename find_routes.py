@@ -121,3 +121,33 @@ def identify_color_hold(image, contours, detection, colour_name):
                     cv2.putText(image, colour_name, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1.0, colours[colour_name])
                     return detection
     return None
+
+def get_user_route(image, detection_routes):
+    """Go through the dictionary of routes and make sure that get the user's preferred route"""
+    user_chose_route = False
+    # Display available colors to user
+    route_colours = []
+    print(detection_routes)
+    while not user_chose_route:
+        print("These are the available routes:")
+        for index, color in enumerate(detection_routes.keys()):
+            route_colours.append(color)
+            print(f"{index}. {color}")
+
+        # Ask the user select route colour
+        selected_number = int(input("Please enter the number that corresponds to the route: "))
+
+        # Ensure the input is within the valid range & return selected route
+        if (selected_number < len(detection_routes)):
+            colour_name = route_colours[selected_number]
+            selected_detections = detection_routes[colour_name]
+            # Perform actions with the selected detection data
+            print(f"You selected the {colour_name} route!")
+            print(selected_detections)
+            b_val, g_val, r_val = colours[colour_name]
+            selected_color = sv.Color(b_val, g_val, r_val)
+            user_chose_route = True
+            return selected_detections, selected_color
+        else:
+            print("Invalid input. Please enter a number within the provided range.")
+

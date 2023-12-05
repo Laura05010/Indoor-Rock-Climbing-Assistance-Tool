@@ -223,7 +223,8 @@ def pose_est_hold_detect(audio_queue):
         frame_counter = 0
         routes = {}
         while cap.isOpened():
-            ret, frame = cap.read()
+            # ret, frame = cap.read()
+            frame = cv2.imread('test_images/test_1.jpg') # for testing specific images 
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
 
@@ -237,6 +238,7 @@ def pose_est_hold_detect(audio_queue):
                 if len(temp_routes) > len(routes): # get the max amount of routes
                     routes = temp_routes
                 if calibrated:
+                    selected_route, route_color = find_routes.get_user_route(image,routes)
                     audio_feedback.calibrated_sound()
 
             else:
@@ -247,9 +249,11 @@ def pose_est_hold_detect(audio_queue):
                 # Make detection
                 results = pose.process(image)
 
-                # annotate the scene with the detections
+                # annotate the scene with the selected route's detections
+                box_annotator = sv.BoxAnnotator(color=route_color, thickness=3,
+                                    text_thickness=2, text_scale=1)
                 frame = box_annotator.annotate(scene=image,
-                                               detections=detections,
+                                               detections=selected_route,
                                                skip_label=True)
 
                 # Recolor back to BGR
