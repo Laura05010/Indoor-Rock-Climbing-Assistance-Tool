@@ -221,6 +221,7 @@ def pose_est_hold_detect(audio_queue):
         calibrated = False # Keeps track if you are at calibration phrase
 
         frame_counter = 0
+        routes = {}
         while cap.isOpened():
             ret, frame = cap.read()
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -232,6 +233,9 @@ def pose_est_hold_detect(audio_queue):
                                               frame, box_annotator, image,
                                               calibrated)
                 find_routes.identify_routes(image, detections)
+                temp_routes = find_routes.identify_routes(image, detections)
+                if len(temp_routes) > len(routes): # get the max amount of routes
+                    routes = temp_routes
                 if calibrated:
                     audio_feedback.calibrated_sound()
 
