@@ -49,7 +49,7 @@ def on_press(key):
         if key.char == 'h':
             with limb_lock:
                 HAND_FOOT = 0
-        elif key.char == 'l':
+        elif key.char == 'f':
             with limb_lock:
                 HAND_FOOT = 1
     except AttributeError:
@@ -394,6 +394,7 @@ def pose_est_hold_detect(audio_queue):
                     n = 0
 
                     print("--------------------\n", end='\r')
+                    # print(RIGHT_LEFT, HAND_FOOT)
 
                     global selected_limb
 
@@ -406,6 +407,12 @@ def pose_est_hold_detect(audio_queue):
                     # elif selected_limb == 'left_hand':
                     elif RIGHT_LEFT == 1 and HAND_FOOT == 0:
                         print("Left hand selected\n", end='\r')
+                        limb = left_thumb_point
+                    elif RIGHT_LEFT == 0 and HAND_FOOT == 1:
+                        print("Right foot selected\n", end='\r')
+                        limb = left_thumb_point
+                    elif RIGHT_LEFT == 1 and HAND_FOOT == 1:
+                        print("Left foot selected\n", end='\r')
                         limb = left_thumb_point
 
                     # Find the closest hold that hasn't been grabbed yet

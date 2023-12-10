@@ -13,7 +13,6 @@ def calibrate_holds(start_time, detections, model, frame, box_annotator, image,
     # break when you reach calibrate_time seconds
     elapsed_time = time.time() - start_time
 
-    calibrate_time = 5
     if elapsed_time <= calibrate_time:
         detections = sv.Detections.from_ultralytics(model(frame,
                                                           verbose=False)[0])
