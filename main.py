@@ -205,6 +205,7 @@ def audio_input_manager():
     global RIGHT_LEFT
 
     while True:
+        print("Here")
         new_hf, new_rl = audio_input.input_audio()
         if new_hf != -1 and new_rl != -1:
             HAND_FOOT, RIGHT_LEFT = new_hf, new_rl
@@ -258,11 +259,12 @@ def pose_est_hold_detect(audio_queue):
                 if calibrated:
                     selected_route, route_color, colour_name = find_routes.get_user_route(image,routes)
                     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    image.flags.writeable = False
                     selected_route = find_routes.add_detections(frame, selected_route, route_color, colour_name)
                     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    image.flags.writeable = False
+                    selected_route = find_routes.remove_detections(frame, selected_route, route_color, colour_name)
+                    # print(selected_route) 
                     audio_feedback.calibrated_sound()
+                    detections = selected_route # UPDATE DETECTIONS WITH FINAL ROUTE
 
             else:
                 # Recolor image to RGB
@@ -297,8 +299,6 @@ def pose_est_hold_detect(audio_queue):
                 try:
                     landmarks = results.pose_landmarks.landmark
                     pose_landmark = mp_pose.PoseLandmark
-
-                    
 
                     d = {}  # body dictionary
 
@@ -412,9 +412,6 @@ def pose_est_hold_detect(audio_queue):
                     pass
 
                 try:
-                    # NO OP
-                    n = 0
-
                     print("--------------------\n", end='\r')
                     # print(RIGHT_LEFT, HAND_FOOT)
 
@@ -439,8 +436,8 @@ def pose_est_hold_detect(audio_queue):
 
                     # Find the closest hold that hasn't been grabbed yet
                     next_target_hold = find_closest_hold(limb, 
-                                                         detections, 
-                                                         grabbed_areas)
+                                                        detections, 
+                                                        grabbed_areas)
 
                     next_target_hold = list(next_target_hold)
 
