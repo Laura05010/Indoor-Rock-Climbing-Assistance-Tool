@@ -82,22 +82,63 @@ def process_speech(text):
         return -1, -1
 
 def input_audio_huggingface(duration=3):
-    try:
-        # Record audio from the microphone for a specified duration (in seconds)
-        audio_data = record_audio(duration)
+    with sr.Microphone() as source:
+        print("Speak something...")
+        # Adjust for ambient noise if necessary
+        recognizer.adjust_for_ambient_noise(source)
         
-        # Perform speech recognition
-        text = speech_recognizer(audio_data)
-        transcription = text['text'].lower()
-        print(f"You said: {transcription}")
+        # Listen for speech input from the microphone
+        audio = recognizer.listen(source)
 
-        # Process the recognized text
-        return process_speech(transcription)
+        try:
+            print("Recognizing...")
+            # Use Google Web Speech API to convert audio to text
+            text = speech_recognizer(audio)
+            transcription = text['text'].lower()
+            print(f"You said: {transcription}")
 
-    except Exception as e:
-        print(f"Error: {e}")
-        pass
-    return -1, -1
+            hand_foot, right_left = None, None
+            if "hand" in text or "arm" in text:
+                hand_foot = 0
+            elif "foot" in text or "leg" in text:
+                hand_foot = 1
+            
+            if "right" in text:
+                right_left = 0
+            elif "left" in text:
+                right_left = 1
+            
+            if (hand_foot is not None) and (right_left is not None):
+                return hand_foot, right_left
+            else:
+                # Alert climber for restatement
+                audio_feedback.unknown_audio_input()
+                
+        except sr.UnknownValueError:
+            print("Sorry, could not understand the audio.")
+            pass
+        except sr.RequestError as e:
+            print(f"Error fetching results; {e}")
+            pass
+        return -1, -1
+
+
+    # try:
+    #     # # Record audio from the microphone for a specified duration (in seconds)
+    #     # audio_data = record_audio(duration)
+        
+    #     # Perform speech recognition
+    #     text = speech_recognizer(audio_data)
+    #     transcription = text['text'].lower()
+    #     print(f"You said: {transcription}")
+
+    #     # Process the recognized text
+    #     return process_speech(transcription)
+
+    # except Exception as e:
+    #     print(f"Error: {e}")
+    #     pass
+    # return -1, -1
 
 
 def input_audio():
