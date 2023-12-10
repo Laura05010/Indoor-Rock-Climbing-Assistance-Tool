@@ -395,57 +395,54 @@ def pose_est_hold_detect(audio_queue):
                     pass
 
                 try:
-                    # Toggle (for having empty console during testing)
-                    toggle = True
-                    if toggle:
-                        print("--------------------\n", end='\r')
-                        # print(RIGHT_LEFT, HAND_FOOT)
+                    print("--------------------\n", end='\r')
+                    # print(RIGHT_LEFT, HAND_FOOT)
 
-                        global selected_limb
+                    global selected_limb
 
-                        limb = None
+                    limb = None
 
-                        # if selected_limb == 'right_hand':
-                        if RIGHT_LEFT == 0 and HAND_FOOT == 0:
-                            print("Right hand selected\n", end='\r')
-                            limb = right_thumb_point
-                        # elif selected_limb == 'left_hand':
-                        elif RIGHT_LEFT == 1 and HAND_FOOT == 0:
-                            print("Left hand selected\n", end='\r')
-                            limb = left_thumb_point
-                        elif RIGHT_LEFT == 0 and HAND_FOOT == 1:
-                            print("Right foot selected\n", end='\r')
-                            limb = left_thumb_point
-                        elif RIGHT_LEFT == 1 and HAND_FOOT == 1:
-                            print("Left foot selected\n", end='\r')
-                            limb = left_thumb_point
+                    # if selected_limb == 'right_hand':
+                    if RIGHT_LEFT == 0 and HAND_FOOT == 0:
+                        print("Right hand selected\n", end='\r')
+                        limb = right_thumb_point
+                    # elif selected_limb == 'left_hand':
+                    elif RIGHT_LEFT == 1 and HAND_FOOT == 0:
+                        print("Left hand selected\n", end='\r')
+                        limb = left_thumb_point
+                    elif RIGHT_LEFT == 0 and HAND_FOOT == 1:
+                        print("Right foot selected\n", end='\r')
+                        limb = left_thumb_point
+                    elif RIGHT_LEFT == 1 and HAND_FOOT == 1:
+                        print("Left foot selected\n", end='\r')
+                        limb = left_thumb_point
 
-                        # Find the closest hold that hasn't been grabbed yet
-                        next_target_hold = find_closest_hold(limb, 
-                                                            detections, 
-                                                            grabbed_areas)
+                    # Find the closest hold that hasn't been grabbed yet
+                    next_target_hold = find_closest_hold(limb, 
+                                                        detections, 
+                                                        grabbed_areas)
 
-                        next_target_hold = list(next_target_hold)
+                    next_target_hold = list(next_target_hold)
 
-                        TARGET_HOLD = next_target_hold
+                    TARGET_HOLD = next_target_hold
 
-                        print(f"Next target hold: {next_target_hold}\n", end='\r')
-                        print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
+                    print(f"Next target hold: {next_target_hold}\n", end='\r')
+                    print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
 
-                        distance_to_next_hold = get_relative_distance(
-                            limb, next_target_hold)
-                        print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
+                    distance_to_next_hold = get_relative_distance(
+                        limb, next_target_hold)
+                    print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
 
-                        if distance_to_next_hold < GRAB_THRESHOLD:
-                            # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
-                            print("Hold grabbed!\n", end='\r')
+                    if distance_to_next_hold < GRAB_THRESHOLD:
+                        # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
+                        print("Hold grabbed!\n", end='\r')
 
-                            if not is_exact_detection_in_list(next_target_hold, 
-                                                            grabbed_areas):
-                                grabbed_areas.append(next_target_hold)
-                                # audio_feedback.calibrated_sound()
+                        if not is_exact_detection_in_list(next_target_hold, 
+                                                        grabbed_areas):
+                            grabbed_areas.append(next_target_hold)
+                            # audio_feedback.calibrated_sound()
 
-                        print("--------------------\n", end='\r')
+                    print("--------------------\n", end='\r')
 
                 except Exception as exception:
                     print(exception)
