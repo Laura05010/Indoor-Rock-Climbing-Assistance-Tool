@@ -223,8 +223,8 @@ def pose_est_hold_detect(audio_queue):
         frame_counter = 0
         routes = {}
         while cap.isOpened():
-            # ret, frame = cap.read()
-            frame = cv2.imread('test_images/test_1.jpg') # for testing specific images
+            ret, frame = cap.read()
+            # frame = cv2.imread('test_images/test_1.jpg') # for testing specific images
 
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
@@ -241,11 +241,12 @@ def pose_est_hold_detect(audio_queue):
                 if calibrated:
                     selected_route, route_color, colour_name = find_routes.get_user_route(image,routes)
                     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    image.flags.writeable = False
                     selected_route = find_routes.add_detections(frame, selected_route, route_color, colour_name)
                     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    image.flags.writeable = False
+                    selected_route = find_routes.remove_detections(frame, selected_route, route_color, colour_name)
+                    # print(selected_route) 
                     audio_feedback.calibrated_sound()
+                    detections = selected_route # UPDATE DETECTIONS WITH FINAL ROUTE
 
             else:
                 # Recolor image to RGB
@@ -280,8 +281,6 @@ def pose_est_hold_detect(audio_queue):
                 try:
                     landmarks = results.pose_landmarks.landmark
                     pose_landmark = mp_pose.PoseLandmark
-
-                    
 
                     d = {}  # body dictionary
 

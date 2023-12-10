@@ -123,7 +123,7 @@ def get_user_route(image, detection_routes):
     user_chose_route = False
     # Display available colors to user
     route_colours = []
-    print(detection_routes)
+    # print(detection_routes)
     while not user_chose_route:
         print("These are the available routes:")
         for index, color in enumerate(detection_routes.keys()):
@@ -191,7 +191,7 @@ def add_square(event, x, y, flags, param):
         y2 = min(image.shape[0], y2)
 
         # Update the image with the new square
-        cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 3)
+        cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), colour_REP_ADD, 3)
         cv2.imshow("Draw Holds", image)
 
         updated_squares.append((x1, y1, x2, y2))
@@ -212,7 +212,7 @@ def add_detections(image, route_to_update, route_color, colour_name):
         cv2.setMouseCallback("Draw Holds", add_square, param=(image, avg_width,avg_height))
 
         while True:
-            cv2.putText(image, "Adding holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 100), 2)
+            cv2.putText(image, "Adding holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_ADD, 2)
             cv2.imshow("Draw Holds", image)
             display_detections(image, route_to_update, colour_name, colours[colour_name])
 
@@ -238,3 +238,73 @@ def add_detections(image, route_to_update, route_color, colour_name):
         print("No new holds added to the route!")
         return route_to_update
 
+marked_points = []
+colour_REP_REMOVE = (147,20,255)
+colour_REP_ADD = (200, 213, 48)
+def get_click_point(event, x, y, flags, param):
+     if event == cv2.EVENT_LBUTTONDOWN:
+        image, avg_width, avg_height = param
+
+        x1 = x - avg_width // 2
+        y1 = y - avg_height // 2
+        x2 = x + avg_width // 2
+        y2 = y + avg_height // 2
+
+        # Ensure x1, y1, x2, y2 are within the bounds of the image
+        x1 = max(0, x1)
+        y1 = max(0, y1)
+        x2 = min(image.shape[1], x2)
+        y2 = min(image.shape[0], y2)
+
+        # Update the image with the new square
+        cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), colour_REP_REMOVE, 3)
+        cv2.imshow("Remove Holds", image)
+
+        marked_points.append((x,y))
+
+
+def remove_detections(image, route_to_update, route_color, colour_name):
+    global chosen_route
+    print("Do you want to remove holds from the route? (yes/no)")
+    user_choice = input().lower()
+    avg_width, avg_height = map(int, average_detection_size(route_to_update))
+
+    chosen_route = [detection[0] for detection in route_to_update]
+
+    if user_choice == "yes" or user_choice == "y":
+        print("CLICK ON THE HOLD TO MARK IT FOR REMOVAL\n")
+        print("Press the d key to stop adding holds\n")
+
+        cv2.namedWindow("Remove Holds")
+        cv2.setMouseCallback("Remove Holds", get_click_point, param=(image, avg_width,avg_height))
+
+        while True:
+            cv2.putText(image, "Removing holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_REMOVE, 2)
+            cv2.imshow("Remove Holds", image)
+            display_detections(image, route_to_update, colour_name, colours[colour_name])
+
+            key = cv2.waitKey(1) & 0xFF
+
+            if key == ord('d'):
+                cv2.destroyWindow("Remove Holds")
+                break
+
+        if len(updated_squares) == 0:
+            print("No holds removed the route!")
+            return route_to_update
+
+        route = [detection[0] for detection in route_to_update]
+        for point in marked_points:
+            x, y = point
+            for i, detection in enumerate(route):
+                x1, y1, x2, y2 = detection
+                if x1 <= x <= x2 and y1 <= y <= y2:
+                    del route[i]  # Remove the detection
+
+        # Update detections with the modified route
+        updated_detections = Detections(np.array(route))
+        print("DONE REMOVING HOLDS FROM THE ROUTE!")
+        return updated_detections
+    else:
+        print("No holds removed the route!")
+        return route_to_update
