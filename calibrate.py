@@ -8,7 +8,7 @@ def calibrate_holds(start_time, detections, model, frame, box_annotator, image,
     # check if it's been 10 seconds
     # break when you reach 10 seconds
 
-    calibrate_time = 20
+    calibrate_time = 5
     # check if it's been calibrate_time seconds
     # break when you reach calibrate_time seconds
     elapsed_time = time.time() - start_time
@@ -25,7 +25,7 @@ def calibrate_holds(start_time, detections, model, frame, box_annotator, image,
 
         print(f"Calibrating... " + " " * 20, end='\r')
 
-        cv2.imshow('Pose Detection', frame)  # Update the window
+        cv2.imshow('Calibrating', frame)  # Update the window
         # elapsed_time = time.time() - start_time # Update elapsed time
         # Recolor back to BGR
         image.flags.writeable = True
