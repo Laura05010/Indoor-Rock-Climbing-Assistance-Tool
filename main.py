@@ -15,6 +15,7 @@ import calibrate
 import find_routes
 import audio_feedback
 import audio_input
+import time
 
 from pynput import keyboard
 
@@ -54,6 +55,22 @@ def on_press(key):
                 HAND_FOOT = 1
     except AttributeError:
         pass  # Handle special keys here if needed
+
+def check_grab_hold(limb, hold, grabbed_areas, GRAB_THRESHOLD):
+    start_time = time.time()
+
+    while time.time() - start_time < 3:
+        current_distance = get_relative_distance(limb, hold)
+        if current_distance > GRAB_THRESHOLD:
+            return  # Exit the function if the distance exceeds the threshold
+
+        time.sleep(0.1)
+
+    # If the loop completes, it means the hold is grabbed
+    with limb_lock:  # Use lock for thread safety
+        if not is_exact_detection_in_list(hold, grabbed_areas):
+            grabbed_areas.append(hold)
+            # audio_feedback.calibrated_sound()
 
 def calculate_angle(a,b,c):
     # First, Mid, End
@@ -223,8 +240,8 @@ def pose_est_hold_detect(audio_queue):
         frame_counter = 0
         routes = {}
         while cap.isOpened():
-            # ret, frame = cap.read()
-            frame = cv2.imread('test_images/test_1.jpg') # for testing specific images
+            ret, frame = cap.read()
+            # frame = cv2.imread('test_images/test_1.jpg') # for testing specific images
 
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
@@ -437,13 +454,14 @@ def pose_est_hold_detect(audio_queue):
                     print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
 
                     if distance_to_next_hold < GRAB_THRESHOLD:
-                        # detections.remove(next_target_hold) instead of removing from the detections object like this, we will do this instead
-                        print("Hold grabbed!\n", end='\r')
+                        threading.Thread(target=check_grab_hold, 
+                                 args=(limb, TARGET_HOLD, grabbed_areas, GRAB_THRESHOLD)).start()
+                        # print("Hold grabbed!\n", end='\r')
 
-                        if not is_exact_detection_in_list(next_target_hold, 
-                                                          grabbed_areas):
-                            grabbed_areas.append(next_target_hold)
-                            # audio_feedback.calibrated_sound()
+                        # if not is_exact_detection_in_list(next_target_hold, 
+                        #                                 grabbed_areas):
+                        #     grabbed_areas.append(next_target_hold)
+                        #     # audio_feedback.calibrated_sound()
 
                     print("--------------------\n", end='\r')
 

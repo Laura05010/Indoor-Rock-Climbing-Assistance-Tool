@@ -8,7 +8,7 @@ def calibrate_holds(start_time, detections, model, frame, box_annotator, image,
     # check if it's been 10 seconds
     # break when you reach 10 seconds
 
-    calibrate_time = 5
+    calibrate_time = 10
     # check if it's been calibrate_time seconds
     # break when you reach calibrate_time seconds
     elapsed_time = time.time() - start_time
