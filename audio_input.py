@@ -47,62 +47,66 @@ def input_audio_google_api():
         return -1, -1
 
 from transformers import pipeline
-import torchaudio
-import torch
+import sounddevice as sd
+import numpy as np
 
 # Initialize the pipeline for speech recognition
-speech_recognizer = pipeline("automatic-speech-recognition", 
-                             model="facebook/wav2vec2-large-960h")
+speech_recognizer = pipeline("automatic-speech-recognition", model="facebook/wav2vec2-large-960h")
 
-def input_audio_hugging_face():
-    """
-    Dependencies:
-    > pip install transformers datasets torchaudio
-    """
-    try:
-        # Use torchaudio to capture speech from the microphone
-        microphone = torchaudio.sox_effects.SoxEffectsChain()
-        microphone.set_input_format(rate=16000, channels=1, precision=16)
-        microphone.set_output_format(rate=16000, channels=1, precision=16)
-        microphone.set_effects([{'input': ('mic',), 'output': ('stdout',)}])
-        print("Speak something...")
-        mic_audio, _ = microphone.sox_build_flow_effects()
-        mic_audio = torch.from_numpy(mic_audio.numpy().astype('float32'))
+def record_audio(duration=5, sr=16000):
+    # Function to record audio from the microphone
+    print(f"Recording for {duration} seconds...")
+    audio = sd.rec(int(duration * sr), samplerate=sr, channels=1, dtype='float32')
+    sd.wait()
+    return np.squeeze(audio)
+
+def process_speech(text):
+    hand_foot, right_left = None, None
+    if "hand" in text or "arm" in text:
+        hand_foot = 0
+    elif "foot" in text or "leg" in text:
+        hand_foot = 1
         
-        # Perform speech recognition
-        text = speech_recognizer(mic_audio)
-        print(f"You said: {text[0]['transcription']}")
+    if "right" in text:
+        right_left = 0
+    elif "left" in text:
+        right_left = 1
         
-        # Perform your specific logic based on recognized text here
-        hand_foot, right_left = None, None
-        if "hand" in text or "arm" in text:
-            hand_foot = 0
-        elif "foot" in text or "leg" in text:
-            hand_foot = 1
-        
-        if "right" in text:
-            right_left = 0
-        elif "left" in text:
-            right_left = 1
-        
-        if (hand_foot is not None) and (right_left is not None):
-            return hand_foot, right_left
-        else:
-            # Alert climber for restatement
-            audio_feedback.unknown_audio_input()
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        # Handle the error or return default values
+    if hand_foot is not None and right_left is not None:
+        print(hand_foot, right_left)
+        return hand_foot, right_left
+    else:
+        # Alert for restatement
+        print("Unknown audio input.")
+        # Perform necessary action for unknown input
         return -1, -1
 
+def input_audio_huggingface(duration=3):
+    try:
+        # Record audio from the microphone for a specified duration (in seconds)
+        audio_data = record_audio(duration)
+        
+        # Perform speech recognition
+        text = speech_recognizer(audio_data)
+        transcription = text['text'].lower()
+        print(f"You said: {transcription}")
+
+        # Process the recognized text
+        return process_speech(transcription)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        pass
+    return -1, -1
+
+
 def input_audio():
-    # input_audio_google_api()
-    # input_audio_hugging_face()
-    n = 0
+    # return input_audio_google_api()
+    return input_audio_huggingface()
 
 def main():
-    input_audio()
+    while True:
+        input_audio()
 
 if "__main__" == __name__:
     main()
