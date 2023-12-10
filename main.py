@@ -223,8 +223,9 @@ def pose_est_hold_detect(audio_queue):
         frame_counter = 0
         routes = {}
         while cap.isOpened():
-            # ret, frame = cap.read()
-            frame = cv2.imread('test_images/test_1.jpg') # for testing specific images 
+            ret, frame = cap.read()
+            # frame = cv2.imread('test_images/test_1.jpg') # for testing specific images
+
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
 

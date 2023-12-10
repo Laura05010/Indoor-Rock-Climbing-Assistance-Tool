@@ -6,7 +6,7 @@ import audio_feedback
 recognizer = sr.Recognizer()
 
 # Use the default microphone as the source for audio input
-def input_audio():
+def input_audio_google_api():
     with sr.Microphone() as source:
         print("Speak something...")
         # Adjust for ambient noise if necessary
@@ -44,6 +44,12 @@ def input_audio():
             print(f"Error fetching results; {e}")
             pass
         return -1, -1
+    
+def input_audio_hugging_face():
+    pass
+
+def input_audio():
+    input_audio_google_api()
 
 def main():
     input_audio()
