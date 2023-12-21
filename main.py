@@ -136,7 +136,7 @@ def is_within_hold(limb, detection):
     # Check if limb coordinates are within the bounding box
     return x1 <= x <= x2 and y1 <= y <= y2
 
-# TODO: function that checks what holds the person is on
+# Function that checks what holds the person is on
 # A hold corresponding to right hand, left hand, right foot, left foot
 def get_curr_position(d, detections):
     extremities = ["right_foot", "left_foot", "right_hand", "left_hand"]
