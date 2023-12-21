@@ -77,6 +77,8 @@ To indicate to the climber where to reach for the next rock hold, we implement a
 $f(x, y) = c \cdot \left( b \cdot e^{-a \cdot \left(x^2 + y^2\right)} + 1 \right)$
 
 where $a = 0.083666$, $b = 3$, and $c$ is the frequency of C-natural. We choose the note of C-natural as it is a relaxing tone that is less likely to agitate the ears when played often. Below we include a plot of the curve, where the center of the rock hold is imagined to be at the origin.
+
+
 ![Plot](read_me_imgs/plot.png)
 
 Similar to a metal detector, the pitch represents the proximity of the limb to the target hold. This simple design is intended to be as intuitive for users, requiring the least amount of training before usage.
