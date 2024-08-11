@@ -183,7 +183,7 @@ def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
         return np.mean(right_hand_pts, axis=0)
     elif limb in L_HAND:
         return np.mean(left_hand_pts, axis=0)
-    
+
     # Otherwise, return limb point
     return np.array([d[limb].x, d[limb].y], np.int32)
 
