@@ -174,6 +174,7 @@ def is_exact_detection_in_list(target_detection, detection_list):
 
 def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
                      left_hand_pts):
+    # If limb is an extremity, return mean of extremity points
     if limb in R_FOOT:
         return np.mean(right_foot_pts, axis=0)
     elif limb in L_FOOT:
@@ -182,6 +183,8 @@ def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
         return np.mean(right_hand_pts, axis=0)
     elif limb in L_HAND:
         return np.mean(left_hand_pts, axis=0)
+    
+    # Otherwise, return limb point
     return np.array([d[limb].x, d[limb].y], np.int32)
 
 def get_relative_distance(center_limb_pt, rock_hold):
@@ -206,11 +209,11 @@ def audio_input_manager():
     global RIGHT_LEFT
 
     while True:
-        print("Here")
+        # print("In audio_input_manager")
         new_hf, new_rl = audio_input.input_audio()
-        if new_hf != -1 and new_rl != -1:
+        if new_hf != -1:
             HAND_FOOT, RIGHT_LEFT = new_hf, new_rl
-        print("TESTING:", HAND_FOOT, RIGHT_LEFT)
+        # print("TESTING:", HAND_FOOT, RIGHT_LEFT)
 
 # def pose_est_hold_detect():
 def pose_est_hold_detect(audio_queue):
@@ -436,10 +439,8 @@ def pose_est_hold_detect(audio_queue):
                         limb = left_thumb_point
 
                     # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(limb, detections,
-                                                         grabbed_areas)
-
-                    next_target_hold = list(next_target_hold)
+                    next_target_hold = list(find_closest_hold(limb, detections,
+                                                              grabbed_areas))
 
                     TARGET_HOLD = next_target_hold
 

@@ -33,13 +33,6 @@ def play_distance(distance) -> None:
 def instruction_confirmed() -> None:
     play(frequency=4 * 203.88, duration=0.25, volume=0.5)
 
-def no_instruction() -> None:
-    play(frequency=203.88, duration=0.25, volume=0.5)
-
-def unknown_audio_input() -> None:
-    play(frequency=203.88, duration=0.25, volume=0.5)
-    play(frequency=203.88, duration=0.25, volume=0.5)
-
 def main() -> None:
     """
     Note:

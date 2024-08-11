@@ -51,6 +51,9 @@ def speech_to_text(device_index, language=Language.ENGLISH):
             print("Please try again.")
     return -1, -1
 
+def input_audio():
+    return speech_to_text(device_index=0)
+
 def main():
     list_mic_device_index()
     while True:
