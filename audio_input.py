@@ -41,21 +41,14 @@ def speech_to_text(device_index, language=Language.ENGLISH):
             if (hand_foot is not None) and (right_left is not None):
                 audio_feedback.instruction_confirmed()
                 return hand_foot, right_left
-            else:
-                # Alert climber for restatement
-                audio_feedback.no_instruction()
         except sr.UnknownValueError:
             print("Sorry, could not understand the audio.")
-            audio_feedback.unknown_audio_input()
             pass
         except sr.RequestError as e:
             print(f"Error fetching results; {e}")
-            audio_feedback.unknown_audio_input()
             pass
         except:
-            # Alert climber for restatement
             print("Please try again.")
-            audio_feedback.unknown_audio_input()
     return -1, -1
 
 def main():

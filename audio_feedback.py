@@ -21,8 +21,8 @@ def play(frequency=C_NATURAL, duration=1, volume=0.5):
 
 def calibrated_sound() -> None:
     note = 4 * C_NATURAL
-    play(note, 0.1, 0.5)
-    play(note, 0.1, 0.5)
+    play(note, 0.25, 0.5)
+    play(note, 0.25, 0.5)
 
     # Wait 1 second
     play(0, 1, 0)
@@ -31,14 +31,14 @@ def play_distance(distance) -> None:
     play((3 * math.exp(-((0.007 * distance) ** 2)) + 1) * C_NATURAL, 0.1, 0.5)
 
 def instruction_confirmed() -> None:
-    play(frequency=4 * 203.88, duration=0.1, volume=0.5)
+    play(frequency=4 * 203.88, duration=0.25, volume=0.5)
 
 def no_instruction() -> None:
-    play(frequency=203.88, duration=0.1, volume=0.5)
+    play(frequency=203.88, duration=0.25, volume=0.5)
 
 def unknown_audio_input() -> None:
-    play(frequency=203.88, duration=0.1, volume=0.5)
-    play(frequency=203.88, duration=0.1, volume=0.5)
+    play(frequency=203.88, duration=0.25, volume=0.5)
+    play(frequency=203.88, duration=0.25, volume=0.5)
 
 def main() -> None:
     """
@@ -48,8 +48,9 @@ def main() -> None:
     """
 
     # Play baseline
-    # play()
-    unknown_audio_input()
+    play()
+    # unknown_audio_input()
+    # instruction_confirmed()
 
 if __name__ == "__main__":
     main()
