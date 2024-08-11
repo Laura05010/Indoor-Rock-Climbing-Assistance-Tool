@@ -11,6 +11,7 @@ from queue import Queue
 import threading
 import time
 
+# Other files
 import calibrate
 import find_routes
 import audio_feedback
@@ -75,31 +76,31 @@ def check_grab_hold(limb, hold, grabbed_areas, GRAB_THRESHOLD):
 def calculate_angle(a,b,c):
     # First, Mid, End
     a, b, c = np.array(a), np.array(b), np.array(c)
-    
+
     radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1],
                                                             a[0]-b[0])
     angle = np.abs(radians*180.0/np.pi)
-    
+
     if 180.0 < angle:
         angle = 360 - angle
-        
-    return angle 
+
+    return angle
 
 def display_hand(image, hand_pts):
     # DISPLAY AREA OF RIGHT HAND ---------------
     # Calculate the center of the circle in 3D space (x, y, z)
     center_3d = np.mean(hand_pts, axis=0)
-    # Calculate the radius of the circle in 3D space based on the average 
+    # Calculate the radius of the circle in 3D space based on the average
     # distance from the center to each point
-    distances = [np.linalg.norm([p[0] - center_3d[0], 
-                                 p[1] - center_3d[1], 
+    distances = [np.linalg.norm([p[0] - center_3d[0],
+                                 p[1] - center_3d[1],
                                  p[2] - center_3d[2]]) for p in hand_pts]
 
     scaling_factor = 3  # scaling factor must be int
     radius_3d = scaling_factor * int(sum(distances) / len(distances))
 
     # Draw the circle in 3D space (-1 thickness for a filled circle)
-    cv2.circle(image, (int(center_3d[0]), int(center_3d[1])), radius_3d, 
+    cv2.circle(image, (int(center_3d[0]), int(center_3d[1])), radius_3d,
                (245, 117, 66), thickness=-1)
 
 def foot_pts(ankle, heel, index, frame_shape_1, frame_shape_0):
@@ -262,7 +263,7 @@ def pose_est_hold_detect(audio_queue):
                     selected_route = find_routes.add_detections(frame, selected_route, route_color, colour_name)
                     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     selected_route = find_routes.remove_detections(frame, selected_route, route_color, colour_name)
-                    # print(selected_route) 
+                    # print(selected_route)
                     audio_feedback.calibrated_sound()
                     detections = selected_route # UPDATE DETECTIONS WITH FINAL ROUTE
 
@@ -320,8 +321,8 @@ def pose_est_hold_detect(audio_queue):
                     d["left_index"] = landmarks[pose_landmark.LEFT_INDEX.value]
                     d["left_thumb"] = landmarks[pose_landmark.LEFT_THUMB.value]
                     d["left_wrist"] = landmarks[pose_landmark.LEFT_WRIST.value]
-                    left_hand_pts = hand_pts(d["left_pinky"], d["left_index"], 
-                                             d["left_thumb"], d["left_wrist"], 
+                    left_hand_pts = hand_pts(d["left_pinky"], d["left_index"],
+                                             d["left_thumb"], d["left_wrist"],
                                              frame_shape_1, frame_shape_0)
 
                     # RIGHT HAND
@@ -361,11 +362,11 @@ def pose_est_hold_detect(audio_queue):
                     right_foot_pts = foot_pts(d["right_ankle"], d["right_heel"],
                                               d["right_foot_index"],
                                               frame_shape_1, frame_shape_0)
-                    
+
                     right_thumb_point = get_center_point(d, "right_thumb",
                                              right_foot_pts, left_foot_pts,
                                              right_hand_pts, left_hand_pts)
-                    
+
                     left_thumb_point = get_center_point(d, "left_thumb",
                                              right_foot_pts, left_foot_pts,
                                              right_hand_pts, left_hand_pts)
@@ -378,19 +379,19 @@ def pose_est_hold_detect(audio_queue):
                                    [right_foot_pts, left_foot_pts]]
 
                     # for detection in detections:
-                    #     point = np.mean(extremities[HAND_FOOT][RIGHT_LEFT], 
+                    #     point = np.mean(extremities[HAND_FOOT][RIGHT_LEFT],
                     #                     axis=0)
                     #     distance = get_relative_distance(point, detection)
                     #     if frame_counter % 5 == 0:
                     #         audio_queue.put(distance)
                     #     print(f"Relative position: {distance} " + " " * 20, end='\r')
                     if TARGET_HOLD is not None:
-                        point = np.mean(extremities[HAND_FOOT][RIGHT_LEFT], 
+                        point = np.mean(extremities[HAND_FOOT][RIGHT_LEFT],
                                         axis=0)
                         distance = get_relative_distance(point, TARGET_HOLD)
                         if frame_counter % 5 == 0:
                             audio_queue.put(distance)
-                    
+
 
                     # center_2d = np.mean(right_hand_pts, axis=0)[:2]
 
@@ -435,9 +436,8 @@ def pose_est_hold_detect(audio_queue):
                         limb = left_thumb_point
 
                     # Find the closest hold that hasn't been grabbed yet
-                    next_target_hold = find_closest_hold(limb, 
-                                                        detections, 
-                                                        grabbed_areas)
+                    next_target_hold = find_closest_hold(limb, detections,
+                                                         grabbed_areas)
 
                     next_target_hold = list(next_target_hold)
 
@@ -451,11 +451,11 @@ def pose_est_hold_detect(audio_queue):
                     print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
 
                     if distance_to_next_hold < GRAB_THRESHOLD:
-                        threading.Thread(target=check_grab_hold, 
+                        threading.Thread(target=check_grab_hold,
                                  args=(limb, TARGET_HOLD, grabbed_areas, GRAB_THRESHOLD)).start()
                         # print("Hold grabbed!\n", end='\r')
 
-                        # if not is_exact_detection_in_list(next_target_hold, 
+                        # if not is_exact_detection_in_list(next_target_hold,
                         #                                 grabbed_areas):
                         #     grabbed_areas.append(next_target_hold)
                         #     # audio_feedback.calibrated_sound()
@@ -473,7 +473,7 @@ def pose_est_hold_detect(audio_queue):
                         color=(245,117,66), thickness=2, circle_radius=2),
                     mp_drawing.DrawingSpec(
                         color=(245,66,230), thickness=2, circle_radius=2))
-                
+
                 frame_counter = (frame_counter + 1) % 5
 
                 # mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
@@ -491,9 +491,9 @@ def pose_est_hold_detect(audio_queue):
 def main():
     # Begin audio feedback thread
     audio_queue = Queue()
-    # detection_thread = threading.Thread(target=pose_est_hold_detect, 
+    # detection_thread = threading.Thread(target=pose_est_hold_detect,
     #                                     args=(audio_queue, ))
-    audio_feedback_thread = threading.Thread(target=audio_feedback_manager, 
+    audio_feedback_thread = threading.Thread(target=audio_feedback_manager,
                                     args=(audio_queue, ), daemon=True)
     audio_input_thread = threading.Thread(target=audio_input_manager,
                                           daemon=True)
