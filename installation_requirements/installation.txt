@@ -1,3 +1,7 @@
+It is recommended that you use an anaconda enviroment to run this project.
+That way you will no conflict preinstalled libraries in your computer.
+
+
 pip install opencv-python
 pip install mediapipe
 pip install numpy
@@ -6,5 +10,4 @@ pip install supervision
 pip install pynput
 pip install SpeechRecognition
 pip install pyaudio
-pip install keyboard
 pip install --upgrade supervision

@@ -8,8 +8,8 @@ import numpy as np
 import supervision as sv
 import cv2
 from supervision.detection.core import Detections
-# from pynput import keyboard
-import keyboard
+from pynput import keyboard
+import threading
 COVER_AREA = 0.13 # area that color needs to be cover for the hold to be that color!
 
 # COLOR RANGES IN HSV (Hue, Value, Saturation)
@@ -213,94 +213,6 @@ def add_square(event, x, y, flags, param):
         updated_squares.append((x1, y1, x2, y2))
 
 
-# def add_detections(image, route_to_update, route_color, colour_name):
-#     global updated_squares
-#     print("Do you want to add holds to the route? (yes/no)")
-#     user_choice = input().lower()
-#     avg_width, avg_height = map(int, average_detection_size(route_to_update))
-
-#     if user_choice == "yes" or user_choice == "y":
-#         updated_squares = []
-#         print("CLICK ON THE CENTER OF THE NEW HOLD TO ADD IT\n")
-#         print("Press the d key to stop adding holds\n")
-
-#         cv2.namedWindow("Draw Holds")
-#         cv2.setMouseCallback("Draw Holds", add_square, param=(image, avg_width,avg_height))
-
-#         while True:
-#             cv2.putText(image, "Adding holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_ADD, 2)
-#             cv2.imshow("Draw Holds", image)
-#             display_detections(image, route_to_update, colour_name, colours[colour_name])
-
-#             key = cv2.waitKey(1) & 0xFF
-
-#             if key == ord('d'):
-#                 cv2.destroyWindow("Draw Holds")
-#                 break
-#         if len(updated_squares) == 0:
-#             print("No new holds added to the route!")
-#             return route_to_update
-
-#         route = [detection[0] for detection in route_to_update]
-#         for square in updated_squares:
-#             square_array = np.array(square, dtype=np.float32)
-#             route.append(square_array)
-
-#         # Update detections with the modified route
-#         updated_detections = Detections(np.array(route))
-#         print("DONE ADDING HOLDS TO THE ROUTE!")
-#         return updated_detections
-#     else:
-#         print("No new holds added to the route!")
-#         return route_to_update
-
-def add_detections(image, route_to_update, route_color, colour_name):
-    global updated_squares
-    print("Do you want to add holds to the route? (yes/no)")
-    user_choice = input().lower()
-    avg_width, avg_height = map(int, average_detection_size(route_to_update))
-
-    if user_choice == "yes" or user_choice == "y":
-        updated_squares = []
-        print("CLICK ON THE CENTER OF THE NEW HOLD TO ADD IT\n")
-        print("Press the d key to stop adding holds\n")
-
-        cv2.namedWindow("Draw Holds")
-        cv2.setMouseCallback("Draw Holds", add_square, param=(image, avg_width, avg_height))
-
-        while True:
-            cv2.putText(image, "Adding holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_ADD, 2)
-            cv2.imshow("Draw Holds", image)
-            display_detections(image, route_to_update, colour_name, colours[colour_name])
-
-            if keyboard.is_pressed('d'):
-                cv2.destroyWindow("Draw Holds")
-                break
-
-            # Use cv2.waitKey to handle window updates
-            if cv2.waitKey(1) & 0xFF == 27:  # Escape key to exit
-                cv2.destroyWindow("Draw Holds")
-                break
-
-        if len(updated_squares) == 0:
-            print("No new holds added to the route!")
-            return route_to_update
-
-        route = [detection[0] for detection in route_to_update]
-        for square in updated_squares:
-            square_array = np.array(square, dtype=np.float32)
-            route.append(square_array)
-
-        # Update detections with the modified route
-        updated_detections = Detections(np.array(route))
-        print("DONE ADDING HOLDS TO THE ROUTE!")
-        return updated_detections
-    else:
-        print("No new holds added to the route!")
-        return route_to_update
-
-
-
 marked_points = []
 colour_REP_REMOVE = (147,20,255)
 colour_REP_ADD = (200, 213, 48)
@@ -325,49 +237,178 @@ def get_click_point(event, x, y, flags, param):
 
         marked_points.append((x,y))
 
+stop_adding_holds = False
+stop_removing_holds = False
 
-def remove_detections(image, route_to_update, route_color, colour_name):
-    global chosen_route
-    print("Do you want to remove holds from the route? (yes/no)")
-    user_choice = input().lower()
+def on_press_adding(key):
+    global stop_adding_holds
+    try:
+        if key.char == 'd':
+            stop_adding_holds = True
+            return False  # Stop the listener when 'd' is pressed
+    except AttributeError:
+        pass
+
+def on_press_removing(key):
+    global stop_removing_holds
+    try:
+        if key.char == 'd':
+            stop_removing_holds = True
+            return False  # Stop the listener when 'd' is pressed
+    except AttributeError:
+        pass
+
+
+
+def add_detections(image, route_to_update, route_color, colour_name):
+    global stop_adding_holds, updated_squares
+    stop_adding_holds = False
+    updated_squares = []
+
+    # Start a keyboard listener in a separate thread before asking the user for input
+    adding_listener = keyboard.Listener(on_press=on_press_adding)
+    adding_thread = threading.Thread(target=adding_listener.start)
+    adding_thread.start()
+
+    print("Do you want to add holds to the route? (yes/no)")
+    user_choice = input().lower()[-1] # just take the last charcter to avoid buffer saving prev inputs
     avg_width, avg_height = map(int, average_detection_size(route_to_update))
 
-    chosen_route = [detection[0] for detection in route_to_update]
+    if user_choice in "yes":
+        print("CLICK ON THE CENTER OF THE NEW HOLD TO ADD IT\n")
+        print("Press the 'd' key to stop adding holds\n")
 
-    if user_choice == "yes" or user_choice == "y":
+        cv2.namedWindow("Draw Holds")
+        cv2.setMouseCallback("Draw Holds", add_square, param=(image, avg_width, avg_height))
+
+        while not stop_adding_holds:
+            cv2.putText(image, "Adding holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_ADD, 2)
+            cv2.imshow("Draw Holds", image)
+            display_detections(image, route_to_update, colour_name, colours[colour_name])
+            if cv2.waitKey(1) & 0xFF == 27:  # Escape key to exit
+                break
+
+        cv2.destroyWindow("Draw Holds")
+        stop_adding_holds = True  # Ensure the listener stops
+        adding_listener.stop()  # Stop the listener
+        adding_thread.join()    # Wait for the thread to finish
+
+        if len(updated_squares) == 0:
+            print("No new holds added to the route!")
+            return route_to_update
+
+        # Collect existing route detections
+        route = [detection[0] for detection in route_to_update]
+
+        # Add the new squares to the route
+        for square in updated_squares:
+            square_array = np.array(square, dtype=np.float32)
+            route.append(square_array)
+
+        # Create arrays of made-up values
+        confidence = np.ones(len(route), dtype=np.float32)
+        class_id = np.zeros(len(route), dtype=int)
+        class_name = np.full(len(route), '0', dtype='<U1')  # or whatever default class name you want
+
+        # Update detections with the modified route and additional fields
+        updated_detections = Detections(
+            xyxy=np.array(route),
+            mask=None,
+            confidence=confidence,
+            class_id=class_id,
+            tracker_id=None,
+            data={'class_name': class_name}
+        )
+
+        print("\nDONE ADDING HOLDS TO THE ROUTE!")
+        return updated_detections
+    else:
+        print("\nNo new holds added to the route!")
+        return route_to_update
+
+
+
+def remove_detections(image, route_to_update, route_color, colour_name):
+    global stop_removing_holds, marked_points
+    stop_removing_holds = False
+    marked_points = []
+
+    # Start a keyboard listener in a separate thread before asking the user for input
+    removing_listener = keyboard.Listener(on_press=on_press_removing)
+    removing_thread = threading.Thread(target=removing_listener.start)
+    removing_thread.start()
+
+    print("Do you want to remove holds from the route? (yes/no)")
+    user_choice = input().lower()[-1] # just take the last character
+    print(f"YOU CHOSE: {user_choice}")
+    avg_width, avg_height = map(int, average_detection_size(route_to_update))
+
+    if user_choice in "yes":
         print("CLICK ON THE HOLD TO MARK IT FOR REMOVAL\n")
-        print("Press the d key to stop adding holds\n")
+        print("Press the 'd' key to stop removing holds\n")
 
         cv2.namedWindow("Remove Holds")
-        cv2.setMouseCallback("Remove Holds", get_click_point, param=(image, avg_width,avg_height))
+        cv2.setMouseCallback("Remove Holds", get_click_point, param=(image, avg_width, avg_height))
 
-        while True:
+        while not stop_removing_holds:
             cv2.putText(image, "Removing holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_REMOVE, 2)
             cv2.imshow("Remove Holds", image)
             display_detections(image, route_to_update, colour_name, colours[colour_name])
 
-            key = cv2.waitKey(1) & 0xFF
-
-            if key == ord('d'):
-                cv2.destroyWindow("Remove Holds")
+            if cv2.waitKey(1) & 0xFF == 27:  # Escape key to exit
                 break
 
-        if len(updated_squares) == 0:
-            print("No holds removed the route!")
+        cv2.destroyWindow("Remove Holds")
+        stop_removing_holds = True  # Ensure the listener stops
+        removing_listener.stop()  # Stop the listener
+        removing_thread.join()    # Wait for the thread to finish
+
+        if len(marked_points) == 0:
+            print("No holds removed from the route!")
             return route_to_update
 
-        route = [detection[0] for detection in route_to_update]
-        for point in marked_points:
-            x, y = point
-            for i, detection in enumerate(route):
-                x1, y1, x2, y2 = detection
-                if x1 <= x <= x2 and y1 <= y <= y2:
-                    del route[i]  # Remove the detection
+        # Initialize empty lists to collect the components
+        bounding_boxes, confidence_array, class_id_array, data_array = [], [], [], []
 
-        # Update detections with the modified route
-        updated_detections = Detections(np.array(route))
+        # Iterate over route_to_update and process detections
+        for detection in route_to_update:
+            detection_coordinates, confidence, class_id, data = detection[0], detection[2], detection[3], detection[5]
+            keep_detection = True
+            for point in marked_points:
+                x, y = point
+                x1, y1, x2, y2 = detection_coordinates
+                if x1 <= x <= x2 and y1 <= y <= y2:
+                    keep_detection = False
+                    break
+
+            if keep_detection:
+                bounding_boxes.append(detection_coordinates)
+                confidence_array.append(confidence)
+                class_id_array.append(class_id)
+                data_array.append(data)
+
+        if len(bounding_boxes) == 0:
+            print("All holds were removed!")
+            return Detections(xyxy=np.array([]),
+                              confidence=np.array([]),
+                              class_id=np.array([]),
+                              data={'class_name': np.array([])})
+
+        # Convert lists to NumPy arrays
+        bounding_boxes = np.array(bounding_boxes)
+        confidence_array = np.array(confidence_array)
+        class_id_array = np.array(class_id_array)
+        data_array = np.array(data_array)
+
+        # Update the Detections instance with the modified detections
+        updated_detections_instance = Detections(
+            xyxy=bounding_boxes,
+            confidence=confidence_array,
+            class_id=class_id_array,
+            data={'class_name': data_array}
+        )
         print("DONE REMOVING HOLDS FROM THE ROUTE!")
-        return updated_detections
+        return updated_detections_instance
     else:
-        print("No holds removed the route!")
+        print("No holds removed from the route!")
         return route_to_update

@@ -222,15 +222,12 @@ def pose_est_hold_detect(audio_queue):
     global RIGHT_LEFT
     global TARGET_HOLD
 
-    # JUST THE POSE
+    # JUST THE POSEy
     global selected_limb
     cap = cv2.VideoCapture(0)
 
     model = YOLO('bestHuge.pt')
-    # box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
     dark_grey= sv.Color(64, 64, 64)
-    # box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2,
-    #                                 text_thickness=2, text_scale=1)
     box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2)
     detections = []
     next_target_hold = None
@@ -279,10 +276,6 @@ def pose_est_hold_detect(audio_queue):
 
                 # Make detection
                 results = pose.process(image)
-
-                # annotate the scene with the selected route's detections
-                # box_annotator = sv.BoxAnnotator(color=route_color, thickness=3,
-                #                     text_thickness=2, text_scale=1)
                 print("ROUTE COLOUR")
                 print(route_color)
 
@@ -293,11 +286,6 @@ def pose_est_hold_detect(audio_queue):
                 image.flags.writeable = True  # Ensure the image is writable
 
                 box_annotator = sv.BoxAnnotator(color=route_color, thickness=3)
-                
-                # frame = box_annotator.annotate(scene=image,
-                #                                detections=selected_route,
-                #                                skip_label=True)
-                
                 frame = box_annotator.annotate(scene=image, detections=selected_route)
 
                 # Ensure frame is writable
@@ -324,7 +312,7 @@ def pose_est_hold_detect(audio_queue):
                     landmarks = results.pose_landmarks.landmark
                     pose_landmark = mp_pose.PoseLandmark
 
-                    d = {}  # body dictionary
+                    d = {}  # body dictionaryy
 
                     # Upper body coordinates
                     d["left_shoulder"] = \
