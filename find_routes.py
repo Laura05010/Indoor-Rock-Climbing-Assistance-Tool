@@ -8,6 +8,8 @@ import numpy as np
 import supervision as sv
 import cv2
 from supervision.detection.core import Detections
+# from pynput import keyboard
+import keyboard
 COVER_AREA = 0.13 # area that color needs to be cover for the hold to be that color!
 
 # COLOR RANGES IN HSV (Hue, Value, Saturation)
@@ -39,6 +41,7 @@ def calculate_area(coordinates):
     return abs(x2 - x1) * abs(y2 - y1)
 
 
+
 def identify_routes(image, detections):
     hsvFrame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -56,36 +59,46 @@ def identify_routes(image, detections):
 
     color_contours = {color: cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0] for color, mask in color_masks.items()}
 
-    routes = {}  # The routes
-
+    routes = {}
     for detection in detections:
         detection_coordinates = detection[0]
+        mask = detection[1]
+        confidence = detection[2]
+        class_id = detection[3]
+        tracker_id = detection[4]
+        data = detection[5]  # This contains additional data, potentially class names
+
         x1, y1, x2, y2 = map(int, detection_coordinates)
 
         color_detected = False
         for color_name, contours in color_contours.items():
             color_detection = identify_color_hold(image, contours, detection, color_name)
             if color_detection:
-                routes.setdefault(color_name, []).extend([detection])
-                # colored_detections.append((x1, y1, x2, y2))  # Add the detection to the set of colored detections
+                routes.setdefault(color_name, []).append(detection)
                 color_detected = True
                 break
 
-        # No specific color is detected
         if not color_detected:
-            routes.setdefault("Uncoloured", []).extend([detection])
-            # colored_detections.append((x1, y1, x2, y2))
-            continue
+            routes.setdefault("Uncoloured", []).append(detection)
 
-    # Necessary to make sure the detections are of
     for color, detection_list in routes.items():
-        bounding_boxes = [detection[0] for detection in detection_list]
-        detections_array = np.array(bounding_boxes)
+        bounding_boxes = np.array([detection[0] for detection in detection_list])
+        confidence_array = np.array([detection[2] for detection in detection_list], dtype=np.float32)
+        class_id_array = np.array([detection[3] for detection in detection_list], dtype=np.int32)
 
-        if detections_array.ndim != 2 or detections_array.shape[1] != 4:
+        if bounding_boxes.ndim != 2 or bounding_boxes.shape[1] != 4:
             raise ValueError(f"Invalid shape for {color} detections. Expected (n, 4) array.")
 
-        detections_instance = Detections(detections_array)
+        # Collect 'data' as an array of class names
+        data_array = np.array([detection[5]['class_name'] for detection in detection_list])
+
+        detections_instance = Detections(
+            xyxy=bounding_boxes,
+            confidence=confidence_array,
+            class_id=class_id_array,
+            data={'class_name': data_array}
+        )
+
         routes[color] = detections_instance
 
     return routes
@@ -101,21 +114,25 @@ def identify_color_hold(image, contours, detection, colour_name):
     detection_coordinates = detection[0]
     area = calculate_area(detection_coordinates)
 
-    # its_curr_color = False
-
-    if area > 300:  # area threshold for holds
-        # x1, y1, x2, y2 = detection_coordinates
+    if area > 300:  # Area threshold for holds
         x1, y1, x2, y2 = map(int, detection_coordinates)
+
+        # Ensure the image is writable
+        image = np.asarray(image)
+        if not image.flags.writeable:
+            image.setflags(write=1)
+
         # Check for red holds
         for contour in contours:
             colour_area = cv2.contourArea(contour)
-            if colour_area >= (COVER_AREA * area):  # making sure color is covering most of the box
+            if colour_area >= (COVER_AREA * area):  # Making sure color is covering most of the box
                 color_x, color_y, color_w, color_h = cv2.boundingRect(contour)
                 if x1 <= color_x <= x2 and y1 <= color_y <= y2:
                     # Color hold found within detection, draw a box the size of the original detection
                     image = cv2.rectangle(image, (x1, y1), (x2, y2), colours[colour_name], 3)
-                    cv2.putText(image, colour_name, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1.0, colours[colour_name])
+                    cv2.putText(image, colour_name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.0, colours[colour_name], 2)
                     return detection
+
     return None
 
 def get_user_route(image, detection_routes):
@@ -139,7 +156,6 @@ def get_user_route(image, detection_routes):
             selected_detections = detection_routes[colour_name]
             # Perform actions with the selected detection data
             print(f"You selected the {colour_name} route!")
-            # print(selected_detections)
             b_val, g_val, r_val = colours[colour_name]
             display_detections(image, selected_detections, colour_name, colours[colour_name])
             selected_color = sv.Color(b_val, g_val, r_val)
@@ -197,6 +213,47 @@ def add_square(event, x, y, flags, param):
         updated_squares.append((x1, y1, x2, y2))
 
 
+# def add_detections(image, route_to_update, route_color, colour_name):
+#     global updated_squares
+#     print("Do you want to add holds to the route? (yes/no)")
+#     user_choice = input().lower()
+#     avg_width, avg_height = map(int, average_detection_size(route_to_update))
+
+#     if user_choice == "yes" or user_choice == "y":
+#         updated_squares = []
+#         print("CLICK ON THE CENTER OF THE NEW HOLD TO ADD IT\n")
+#         print("Press the d key to stop adding holds\n")
+
+#         cv2.namedWindow("Draw Holds")
+#         cv2.setMouseCallback("Draw Holds", add_square, param=(image, avg_width,avg_height))
+
+#         while True:
+#             cv2.putText(image, "Adding holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_ADD, 2)
+#             cv2.imshow("Draw Holds", image)
+#             display_detections(image, route_to_update, colour_name, colours[colour_name])
+
+#             key = cv2.waitKey(1) & 0xFF
+
+#             if key == ord('d'):
+#                 cv2.destroyWindow("Draw Holds")
+#                 break
+#         if len(updated_squares) == 0:
+#             print("No new holds added to the route!")
+#             return route_to_update
+
+#         route = [detection[0] for detection in route_to_update]
+#         for square in updated_squares:
+#             square_array = np.array(square, dtype=np.float32)
+#             route.append(square_array)
+
+#         # Update detections with the modified route
+#         updated_detections = Detections(np.array(route))
+#         print("DONE ADDING HOLDS TO THE ROUTE!")
+#         return updated_detections
+#     else:
+#         print("No new holds added to the route!")
+#         return route_to_update
+
 def add_detections(image, route_to_update, route_color, colour_name):
     global updated_squares
     print("Do you want to add holds to the route? (yes/no)")
@@ -209,18 +266,22 @@ def add_detections(image, route_to_update, route_color, colour_name):
         print("Press the d key to stop adding holds\n")
 
         cv2.namedWindow("Draw Holds")
-        cv2.setMouseCallback("Draw Holds", add_square, param=(image, avg_width,avg_height))
+        cv2.setMouseCallback("Draw Holds", add_square, param=(image, avg_width, avg_height))
 
         while True:
             cv2.putText(image, "Adding holds...", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, colour_REP_ADD, 2)
             cv2.imshow("Draw Holds", image)
             display_detections(image, route_to_update, colour_name, colours[colour_name])
 
-            key = cv2.waitKey(1) & 0xFF
-
-            if key == ord('d'):
+            if keyboard.is_pressed('d'):
                 cv2.destroyWindow("Draw Holds")
                 break
+
+            # Use cv2.waitKey to handle window updates
+            if cv2.waitKey(1) & 0xFF == 27:  # Escape key to exit
+                cv2.destroyWindow("Draw Holds")
+                break
+
         if len(updated_squares) == 0:
             print("No new holds added to the route!")
             return route_to_update
@@ -237,6 +298,8 @@ def add_detections(image, route_to_update, route_color, colour_name):
     else:
         print("No new holds added to the route!")
         return route_to_update
+
+
 
 marked_points = []
 colour_REP_REMOVE = (147,20,255)

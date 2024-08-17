@@ -151,7 +151,8 @@ def get_curr_position(d, detections):
 def find_closest_hold(hand_point, detections, grabbed_areas):
     closest_detection = None
     min_distance = float('inf')
-    print(f"Detections: {detections}\n", end='\r')
+    #
+    # print(f"Detections: {detections}\n", end='\r')
     # print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
     for detection in detections:
         if is_exact_detection_in_list(detection, grabbed_areas):
@@ -228,8 +229,9 @@ def pose_est_hold_detect(audio_queue):
     model = YOLO('bestHuge.pt')
     # box_annotator = sv.BoxAnnotator(thickness=2, text_thickness=2, text_scale=1)
     dark_grey= sv.Color(64, 64, 64)
-    box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2,
-                                    text_thickness=2, text_scale=1)
+    # box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2,
+    #                                 text_thickness=2, text_scale=1)
+    box_annotator = sv.BoxAnnotator(color=dark_grey, thickness=2)
     detections = []
     next_target_hold = None
     grabbed_areas = []  # List to store the coordinates of grabbed holds
@@ -245,8 +247,8 @@ def pose_est_hold_detect(audio_queue):
         frame_counter = 0
         routes = {}
         while cap.isOpened():
-            ret, frame = cap.read()
-            # frame = cv2.imread('test_images/test_1.jpg') # for testing specific images
+            # ret, frame = cap.read()
+            frame = cv2.imread('test_images/main_test.jpg') # for testing specific images
 
             image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             image.flags.writeable = False
@@ -279,14 +281,32 @@ def pose_est_hold_detect(audio_queue):
                 results = pose.process(image)
 
                 # annotate the scene with the selected route's detections
-                box_annotator = sv.BoxAnnotator(color=route_color, thickness=3,
-                                    text_thickness=2, text_scale=1)
-                frame = box_annotator.annotate(scene=image,
-                                               detections=selected_route,
-                                               skip_label=True)
+                # box_annotator = sv.BoxAnnotator(color=route_color, thickness=3,
+                #                     text_thickness=2, text_scale=1)
+                print("ROUTE COLOUR")
+                print(route_color)
 
-                # Recolor back to BGR
-                image.flags.writeable = True
+                print("DARK GREY- proper format")
+                print(dark_grey)
+                # Recolor image to RGB
+                image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                image.flags.writeable = True  # Ensure the image is writable
+
+                box_annotator = sv.BoxAnnotator(color=route_color, thickness=3)
+                
+                # frame = box_annotator.annotate(scene=image,
+                #                                detections=selected_route,
+                #                                skip_label=True)
+                
+                frame = box_annotator.annotate(scene=image, detections=selected_route)
+
+                # Ensure frame is writable
+                frame = np.asarray(frame)
+                if not frame.flags.writeable:
+                    frame.setflags(write=1)
+
+                # # Recolor back to BGR
+                # image.flags.writeable = True
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
                 mp_drawing.draw_landmarks(
@@ -443,13 +463,13 @@ def pose_est_hold_detect(audio_queue):
                                                               grabbed_areas))
 
                     TARGET_HOLD = next_target_hold
-
-                    print(f"Next target hold: {next_target_hold}\n", end='\r')
-                    print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
+                    # TODO: TARGET HOLD NEEDS TO BE FORMATTED PROPERLY
+                    #print(f"Next target hold: {next_target_hold}\n", end='\r')
+                    #print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
 
                     distance_to_next_hold = get_relative_distance(
                         limb, next_target_hold)
-                    print(f"Distance to next hold: {distance_to_next_hold} units\n", end='\r')
+                    print(f"Distance to next hold: {distance_to_next_hold} pixels\n", end='\r')
 
                     if distance_to_next_hold < GRAB_THRESHOLD:
                         threading.Thread(target=check_grab_hold,
