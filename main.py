@@ -151,7 +151,7 @@ def get_curr_position(d, detections):
 def find_closest_hold(hand_point, detections, grabbed_areas):
     closest_detection = None
     min_distance = float('inf')
-    #
+
     # print(f"Detections: {detections}\n", end='\r')
     # print(f"Grabbed areas: {grabbed_areas}\n", end='\r')
     for detection in detections:
