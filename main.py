@@ -87,7 +87,7 @@ def calculate_angle(a,b,c):
     return angle
 
 def display_hand(image, hand_pts):
-    # DISPLAY AREA OF RIGHT HAND ---------------
+    """ Displays the circular area of the hand_pts on the image. """
     # Calculate the center of the circle in 3D space (x, y, z)
     center_3d = np.mean(hand_pts, axis=0)
     # Calculate the radius of the circle in 3D space based on the average
@@ -189,6 +189,8 @@ def get_center_point(d, limb, right_foot_pts, left_foot_pts, right_hand_pts,
     return np.array([d[limb].x, d[limb].y], np.int32)
 
 def get_relative_distance(center_limb_pt, rock_hold):
+    """ Returns the distance between the center position of the limb and
+        the center position of the rock hold """
     # points of rock_hold
     rock_hold_pos = rock_hold[0]
     x1, y1, x2, y2 = \
@@ -222,7 +224,7 @@ def pose_est_hold_detect(audio_queue):
     global RIGHT_LEFT
     global TARGET_HOLD
 
-    # JUST THE POSEy
+    # JUST THE POSE
     global selected_limb
     cap = cv2.VideoCapture(0)
 
